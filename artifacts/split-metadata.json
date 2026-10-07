@@ -1,0 +1,18 @@
+{
+  "dataset": "sklearn.datasets.load_digits (default ten classes)",
+  "dataset_shape": [
+    1797,
+    64
+  ],
+  "dataset_digest": "f6d9e39f37dc45d327f6db33428ee58970ccceabb2535a5c179de35886b70443",
+  "seed": 42,
+  "fractions": {
+    "train": 0.6,
+    "validation": 0.2,
+    "test": 0.2
+  },
+  "stratified": true,
+  "python": "3.14.4",
+  "numpy": "2.5.3",
+  "scikit_learn": "1.9.1"
+}

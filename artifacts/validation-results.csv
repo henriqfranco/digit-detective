@@ -1,0 +1,2 @@
+model,configuration,correct,total,accuracy
+majority_class,always predict 1; lowest-label tie rule,37,360,0.10277777777777777
