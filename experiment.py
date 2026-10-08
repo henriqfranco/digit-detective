@@ -4,12 +4,16 @@ import sys
 from hashlib import sha256
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import sklearn
 from sklearn.datasets import load_digits
 from sklearn.dummy import DummyClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+
+from neighbor_math import squared_distance
 
 SEED = 42
 PARTITIONS = ("train", "validation", "test")
@@ -91,6 +95,36 @@ def evaluate_majority_baseline(X_train, y_train, X_validation, y_validation):
     return majority_label, correct, manual_accuracy
 
 
+def trace_knn_prediction(model, query, X_train, y_train, training_indices):
+    """Explain one uniform-vote Euclidean prediction using original sample IDs."""
+    if model.metric != "euclidean" or model.weights != "uniform":
+        raise ValueError("This trace requires Euclidean distance and uniform votes")
+    batch = query.reshape(1, X_train.shape[1])
+    prediction = int(model.predict(batch)[0])
+    distances, rows = model.kneighbors(batch)
+    distances, rows = distances[0], rows[0]
+    labels = y_train[rows]
+    classes, counts = np.unique(labels, return_counts=True)
+    assert int(classes[counts.argmax()]) == prediction, "Shown neighbor votes do not explain the prediction"
+    np.testing.assert_allclose(
+        distances, [np.sqrt(squared_distance(query, X_train[row])) for row in rows]
+    )
+    neighbors = [
+        {
+            "training_row": int(row),
+            "dataset_index": int(training_indices[row]),
+            "label": int(label),
+            "distance": float(distance),
+        }
+        for row, label, distance in zip(rows, labels, distances)
+    ]
+    return {
+        "prediction": prediction,
+        "neighbors": neighbors,
+        "votes": dict(zip(classes.tolist(), counts.tolist())),
+    }
+
+
 def main():
     digits = load_digits()
     X, y = digits.data, digits.target
@@ -130,18 +164,65 @@ def main():
     print(f"Accuracy: {correct} / {len(y_validation)} = {accuracy:.6f} = {accuracy:.2%}")
     print("Manual predictions and accuracy match DummyClassifier and accuracy_score.")
 
-    result = {
+    results = [{
         "model": "majority_class",
         "configuration": f"always predict {majority_label}; lowest-label tie rule",
         "correct": correct,
         "total": len(y_validation),
         "accuracy": accuracy,
-    }
+    }]
+
+    model = KNeighborsClassifier(n_neighbors=3, metric="euclidean", weights="uniform", algorithm="brute")
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_validation)
+    knn_correct = int(np.count_nonzero(predictions == y_validation))
+    knn_accuracy = accuracy_score(y_validation, predictions)
+    print("\nInitial KNN: k=3, Euclidean distance, uniform votes, raw pixels.")
+    print(f"Fitted on {len(X_train)} training images; validation {knn_correct}/{len(y_validation)} = {knn_accuracy:.2%}")
+    results.append({
+        "model": "knn",
+        "configuration": "k=3; euclidean; uniform; brute; raw pixels",
+        "correct": knn_correct,
+        "total": len(y_validation),
+        "accuracy": knn_accuracy,
+    })
+
+    # Trace the first saved validation sample, chosen independently of its result.
+    query_index = int(splits["validation"][0])
+    trace = trace_knn_prediction(model, X_validation[0], X_train, y_train, splits["train"])
+    assert trace["prediction"] == predictions[0], "Batch and single-query predictions disagree"
+    assert all(neighbor["dataset_index"] in splits["train"] for neighbor in trace["neighbors"])
+    trace.update({
+        "query_dataset_index": query_index,
+        "query_partition": "validation",
+        "true_label": int(y_validation[0]),
+        "configuration": {"k": 3, "metric": "euclidean", "weights": "uniform", "algorithm": "brute"},
+    })
+    print(f"\nValidation sample {query_index}: predicted {trace['prediction']}, true label {trace['true_label']}")
+    print("Training row  Original sample  Label  Distance")
+    for neighbor in trace["neighbors"]:
+        print(f"{neighbor['training_row']:>12}  {neighbor['dataset_index']:>15}  {neighbor['label']:>5}  {neighbor['distance']:.6f}")
+    print(f"Votes: {trace['votes']}; prediction: {trace['prediction']}")
+    (artifacts / "knn-prediction-trace.json").write_text(json.dumps(trace, indent=2) + "\n")
+
+    figure, axes = plt.subplots(1, 4, figsize=(10, 3.5), layout="constrained")
+    figure.suptitle("One validation image and its three voting training neighbors", fontsize=14)
+    axes[0].imshow(digits.images[query_index], cmap="gray", vmin=0, vmax=16, interpolation="nearest")
+    axes[0].set_title(f"Validation sample {query_index}\nTrue {trace['true_label']} | predicted {trace['prediction']}", fontsize=11)
+    for rank, neighbor in enumerate(trace["neighbors"], start=1):
+        axes[rank].imshow(digits.images[neighbor["dataset_index"]], cmap="gray", vmin=0, vmax=16, interpolation="nearest")
+        axes[rank].set_title(f"Neighbor {rank}\nOriginal sample {neighbor['dataset_index']}\nLabel {neighbor['label']} | distance {neighbor['distance']:.2f}", fontsize=11)
+    for ax in axes:
+        ax.set_axis_off()
+    figure.savefig(artifacts / "knn-prediction-trace.png", dpi=160)
+    plt.close(figure)
+    print(f"Saved prediction trace and figure in: {artifacts}")
+
     result_path = artifacts / "validation-results.csv"
     with result_path.open("w", newline="") as output:
-        writer = csv.DictWriter(output, fieldnames=result.keys())
+        writer = csv.DictWriter(output, fieldnames=results[0].keys())
         writer.writeheader()
-        writer.writerow(result)
+        writer.writerows(results)
     print(f"Saved validation results: {result_path}")
 
 

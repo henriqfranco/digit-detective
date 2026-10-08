@@ -1,0 +1,35 @@
+{
+  "prediction": 9,
+  "neighbors": [
+    {
+      "training_row": 316,
+      "dataset_index": 1276,
+      "label": 9,
+      "distance": 17.26267650163207
+    },
+    {
+      "training_row": 1068,
+      "dataset_index": 1360,
+      "label": 9,
+      "distance": 17.663521732655695
+    },
+    {
+      "training_row": 800,
+      "dataset_index": 455,
+      "label": 9,
+      "distance": 18.439088914585774
+    }
+  ],
+  "votes": {
+    "9": 3
+  },
+  "query_dataset_index": 1686,
+  "query_partition": "validation",
+  "true_label": 9,
+  "configuration": {
+    "k": 3,
+    "metric": "euclidean",
+    "weights": "uniform",
+    "algorithm": "brute"
+  }
+}

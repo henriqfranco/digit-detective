@@ -1,6 +1,6 @@
 # Digit Detective: learning and implementation plan
 
-Status: Steps 0 through 5 and Checkpoint A are complete. The learner calculated distances, interpreted smaller-distance ordering, distinguished neighbor votes from the single prediction, and identified a multiclass vote tie. Tiny-vector library checks passed and both tie mechanisms were discussed. Step 6 is next; digit KNN fitting, hyperparameter comparison, and test evaluation have not started.
+Status: Steps 0 through 6 and Checkpoints A and B are complete. The learner identified labeled training examples as fitted state, k as a chosen hyperparameter, and the need for all 64 features in each query row. Initial KNN and its prediction trace are verified. Step 7 is next; hyperparameter comparison and test evaluation have not started.
 
 ## Objective and learning contract
 

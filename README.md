@@ -255,7 +255,7 @@ Run the new experiment script from the project folder:
 .venv/bin/python experiment.py
 ```
 
-The first run creates and saves the split. Later runs load the saved arrays without regenerating or rewriting them. Split setup itself fits no model; the script now also performs the Step 4 baseline described below. The inspection script stays focused on its original dataset exploration and figures.
+The first run creates and saves the split. Later runs load the saved arrays without regenerating or rewriting them. Split setup itself fits no model; the script now also performs the baseline and initial KNN experiments described below. The inspection script stays focused on its original dataset exploration and figures.
 
 ### Why three groups?
 
@@ -482,6 +482,104 @@ Two kinds of ties are different:
 - Distance tie at the selection boundary: two candidates are equally distant, but only one remaining slot is available. The demonstration uses two examples at distance 1 and k=1; reversing their training order changes the installed classifier's prediction from 7 to 3. This illustrates the documented possibility of training-order dependence. Do not assume every implementation or search method resolves equally distant candidates identically.
 
 Step 5 is complete: arithmetic and library checks passed. The learner calculated distance, interpreted smaller-distance ordering, produced one prediction from neighbor votes, and identified the equal-vote tie for [1,2,3]. The deterministic vote convention and the separate issue of equal distances at the neighbor-selection boundary were discussed. Step 6 will fit and trace a digit classifier using only the saved training and validation partitions.
+
+## Step 6: fit KNN on digit images and trace a validation prediction
+
+Run the existing experiment entry point:
+
+```sh
+.venv/bin/python experiment.py
+```
+
+It reloads the same saved partitions, evaluates the baseline, fits one provisional KNN configuration, evaluates it on validation, and saves a prediction trace. There is no comparison of multiple k values in this step, and test predictions remain reserved.
+
+### Configuration and fitting
+
+```python
+model = KNeighborsClassifier(
+    n_neighbors=3,
+    metric="euclidean",
+    weights="uniform",
+    algorithm="brute",
+)
+model.fit(X_train, y_train)
+predictions = model.predict(X_validation)
+```
+
+The four constructor settings specify three neighbors, the Euclidean distance we derived, one equal vote per neighbor, and exact brute-force neighbor search. This is a transparent starting procedure for a small CPU-sized dataset. k=3 is provisional, not a validation-selected winner. Searching more configurations belongs to Step 7.
+
+The training arrays contain 1,077 rows of 64 features and their 1,077 labels. Fitting KNN retains the training examples and label information needed to classify new queries. Unlike a coefficient-based model, it does not optimize a small vector of numeric weights in this workflow. Its fitted state depends on the supplied examples; fitting is meaningful even without gradient-based weight learning. Prediction computes distances to those examples, selects neighbors, and returns votes' winning labels without receiving query answers.
+
+Distinguish data-derived fitted state from chosen hyperparameters:
+
+| Fitted information | Chosen settings |
+| --- | --- |
+| Training feature vectors, labels, class information | k, distance metric, vote weighting, search algorithm |
+
+`fit` does not discover that k should equal 3. We supplied that choice. Later validation comparisons will help choose k. The model can generalize to held-out images by applying the distance-and-vote rule to them even though its internal representation retains training instances.
+
+### Why raw pixels?
+
+Every feature measures pixel brightness in the common 0..16 range. We therefore begin with raw intensities. Multiplying every coordinate by the same positive factor multiplies all Euclidean distances by that factor and preserves neighbor ranking for equal votes. Scaling each feature differently changes the distance geometry and requires experimental justification. Learned transformations, if introduced later, must be fitted using training only.
+
+### One query still needs a row axis
+
+The first saved validation sample is original dataset index 1686. Its feature row has shape `(64,)`. The library expects a matrix whose rows are queries, so one image is supplied as `(1,64)`:
+
+```python
+query = X_validation[0]
+batch = query.reshape(1, 64)
+prediction = model.predict(batch)[0]
+```
+
+The trace function uses X_train.shape[1] rather than a hardcoded 64 so the same calculation can be checked on our three-feature toy examples. This does not change any feature values. A batch of 360 images has shape `(360,64)` and produces 360 predictions; one query row produces one prediction.
+
+### The actual prediction and neighbors
+
+The sample was selected as the first stored validation member before considering correctness. Its predicted and true labels are both 9. Neighbor retrieval returns positions within X_train, which must be mapped through the saved training index array to recover original dataset IDs:
+
+| Neighbor | Position in X_train | Original dataset index | Label | Euclidean distance |
+| --- | --- | --- | --- | --- |
+| 1 | 316 | 1276 | 9 | 17.262677 |
+| 2 | 1068 | 1360 | 9 | 17.663522 |
+| 3 | 800 | 455 | 9 | 18.439089 |
+
+For example, training_indices[316] is 1276; therefore X_train[316] and the original image at dataset index 1276 refer to the same training example. Neither index identifies the digit category: the label is separately 9.
+
+The selected labels [9,9,9] give class 9 three votes and yield one prediction, 9. The query's true label is looked up for evaluation after inference. It does not participate in distance calculation or voting. Three agreeing neighbors are neighborhood agreement, not a calibrated guarantee of correctness.
+
+The nearest neighbor's squared distance is 298, so its Euclidean distance is sqrt(298), approximately 17.26. A distance can exceed the maximum individual pixel intensity of 16 because it combines differences across all 64 features. It is not one pixel's brightness.
+
+### Accuracy and saved artifacts
+
+| Model | Validation correct/total | Errors | Accuracy |
+| --- | --- | --- | --- |
+| Training-majority baseline | 37/360 | 323 | 10.28% |
+| Initial KNN, k=3 | 353/360 | 7 | 98.06% |
+
+These measurements use the exact same validation membership. The KNN result is an initial validation observation, not a final test result or proof of performance on personal drawings. A correct illustrated prediction does not explain the seven mistakes; that analysis is reserved for its planned stage.
+
+Artifacts:
+
+- `validation-results.csv` now contains both comparison rows with full-precision accuracy fractions.
+- `knn-prediction-trace.json` contains configuration, query ID, true/predicted labels, neighbor training positions, original IDs, labels, distances, and votes.
+- `knn-prediction-trace.png` displays the query and the three voting training examples on the same fixed grayscale intensity scale.
+
+`trace_knn_prediction` is a small reusable explanation function called by the experiment and its runnable check. It accepts no true query label. It supports the current uniform-vote Euclidean configuration, checks the selected distances using the existing squared_distance arithmetic helper, and confirms that the shown vote yields the actual model prediction. It is not a second classifier used for benchmark inference.
+
+### Verification and learning checkpoint
+
+The KNN check passed for known toy distances, training-row to original-ID mapping, label alignment, a two-to-one vote, and a tied vote. The existing baseline and split checks also passed. Benchmark execution verified batch/single-query agreement, training-only neighbor IDs, and NumPy/library distance agreement. The saved figure was visually inspected, and the split file fingerprints remain unchanged.
+
+To run the new focused check:
+
+```sh
+.venv/bin/python check_knn.py
+```
+
+Querying a fitted training image, especially with k=1, can retrieve that same image at distance zero. Such an easy familiar-example prediction is why training performance alone is insufficient for generalization claims. The illustrated query comes from validation and has a different original ID from every training member.
+
+Step 6 and Checkpoint B are complete. The learner identified labeled examples as KNN's retained fitted information, k as a chosen hyperparameter, and the requirement for all 64 image features. Query shape was clarified: (1,64) is one image with 64 features, whereas (64,1) is 64 samples with one feature each. Prior checkpoints established data roles, distance calculations, and voting; the digit prediction and its actual neighbors are verified. Step 7 will compare k=1,3,5,9 on the same validation partition without accessing test predictions.
 
 ## References
 
