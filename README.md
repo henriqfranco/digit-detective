@@ -428,6 +428,61 @@ The baseline check uses small labeled arrays to establish training-only choice e
 
 Step 4 is complete: baseline predictions and score are verified, and the learner explained how high aggregate accuracy can hide zero recognition of another class and why the constant prediction must come from training frequencies. Matching the library verifies the calculation; the scientific reason for training-only choice is to keep fitting separate from held-out evaluation. Step 5 will derive tiny-vector distances and neighbor votes before using KNN on digit images.
 
+## Step 5: tiny-vector distances and votes
+
+We calculated distances and votes by hand before expressing them in Python. `neighbor_math.py` is a self-contained educational example with runnable assertions. It uses no digit images, saved partitions, or benchmark results.
+
+```sh
+.venv/bin/python neighbor_math.py
+```
+
+### Distance summarizes feature differences
+
+For query q=[1,2,3] and example a=[2,4,3], subtraction gives [-1,-2,0]. Squaring gives [1,4,0]; summing gives squared distance 5; taking the square root gives Euclidean distance sqrt(5), approximately 2.236.
+
+The learner calculated q minus b=[1,2,5] as [0,0,-2], squared distance 4, and distance 2. Therefore b is nearer because 2 is smaller than 2.236. A distance need not occur as a value inside the query vector. A feature value describes one coordinate; a distance summarizes differences across corresponding coordinates. Numerical equality between a feature value and a distance is coincidental.
+
+Squaring prevents positive and negative feature differences from cancelling. Identical vectors have distance zero. Smaller Euclidean distance means nearer under this numerical comparison; it does not guarantee matching labels or human-perceived similarity.
+
+The calculation is:
+
+```python
+def squared_distance(a, b):
+    return np.sum((a - b) ** 2)
+```
+
+Array subtraction operates on corresponding entries. `** 2` squares each difference; `np.sum` adds them. `np.sqrt` converts the squared distance into Euclidean distance. This helper is only an arithmetic teaching example; later digit classification will use the library's neighbor implementation.
+
+Square root preserves the order of nonnegative numbers, so sorting squared distances selects the same neighbors as sorting Euclidean distances. They are different numerical quantities; replacing distance with squared distance would change inverse-distance weights if those were introduced. Our initial voting uses equal weights.
+
+### One query, several votes, one prediction
+
+For a new tiny training set and the same query q:
+
+| Training vector | Label | Squared distance | Euclidean distance |
+| --- | --- | --- | --- |
+| [1,2,4] | 7 | 1 | 1 |
+| [1,4,3] | 3 | 4 | 2 |
+| [4,2,3] | 3 | 9 | 3 |
+| [1,2,7] | 7 | 16 | 4 |
+
+`k` is the number of nearest training examples selected to vote. At k=1, the selected label is [7] and the prediction is 7. At k=3, the selected labels are [7,3,3]: class 3 has two votes and class 7 one, so the single prediction is 3. The closest neighbor can lose the vote. The learner correctly predicted 7 for the alternative selected labels [7,7,3].
+
+Neighbor labels are inputs to the vote, not three final predictions for the same query. Each selected neighbor contributes one vote. Class labels are categories, so the classifier counts occurrences rather than averaging their numerical identifiers. The winning class has the most votes; with more than two categories it need not exceed half of k.
+
+`np.argsort` returns sample positions in distance order. The script takes the first k positions, retrieves their labels, counts them with np.unique, and picks the largest count. The toy examples have distinct distances, so neighbor membership is unambiguous.
+
+### Check the library and discuss ties
+
+The script fits KNeighborsClassifier on the four tiny examples with explicit Euclidean distance, uniform votes, and exact brute-force search. It verifies neighbor indices, distances, and the final predictions for k=1 and k=3. `query.reshape(1,3)` supplies one query row with three features, as required by the batch-oriented prediction API. All checks passed.
+
+Two kinds of ties are different:
+
+- Vote tie: neighbor labels [3,1,2] each have one vote at k=3, despite distinct distances. Odd k does not prevent every multiclass tie. The installed uniform-vote classifier returns the smallest class label, 1, in this case. That is a deterministic convention, not evidence that class 1 is more likely to be correct. The nearest label here is 3, so the convention is not simply choosing the nearest vote.
+- Distance tie at the selection boundary: two candidates are equally distant, but only one remaining slot is available. The demonstration uses two examples at distance 1 and k=1; reversing their training order changes the installed classifier's prediction from 7 to 3. This illustrates the documented possibility of training-order dependence. Do not assume every implementation or search method resolves equally distant candidates identically.
+
+Step 5 is complete: arithmetic and library checks passed. The learner calculated distance, interpreted smaller-distance ordering, produced one prediction from neighbor votes, and identified the equal-vote tie for [1,2,3]. The deterministic vote convention and the separate issue of equal distances at the neighbor-selection boundary were discussed. Step 6 will fit and trace a digit classifier using only the saved training and validation partitions.
+
 ## References
 
 - [Scikit-learn installation guidance](https://scikit-learn.org/stable/install.html)
@@ -445,3 +500,5 @@ Step 4 is complete: baseline predictions and score are verified, and the learner
 - [Scikit-learn majority-class baseline](https://scikit-learn.org/stable/modules/generated/sklearn.dummy.DummyClassifier.html)
 - [Scikit-learn accuracy](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html)
 - [NumPy maximum-position selection](https://numpy.org/doc/stable/reference/generated/numpy.argmax.html)
+- [Scikit-learn nearest-neighbor concepts](https://scikit-learn.org/stable/modules/neighbors.html)
+- [Scikit-learn KNeighborsClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html)

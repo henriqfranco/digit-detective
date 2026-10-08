@@ -10,13 +10,15 @@ Step 3 is complete: saved split integrity and reload checks passed. The learner 
 
 Step 4 is complete: manual and library validation predictions agree (37/360, 10.28%), results are saved, and checks passed without changing split files. The learner identified 0% recognition of sevens despite 95% overall accuracy in the imbalanced example, and correctly chose training-majority label 7 despite validation favoring 2. Training labels 1,3,4,5,6 tie at 109 each in the real split, so the lowest-label rule predicts 1. Test prediction/evaluation remains reserved.
 
+Step 5 is complete: tiny-vector checks passed, and the learner calculated squared distance 4, identified smaller distances as nearer, chose a single prediction from repeated neighbor labels, and recognized equal votes for [1,2,3]. The library's lowest-label vote convention and the separate issue of equally distant selection candidates were discussed. No digit partitions or benchmark results were accessed by neighbor_math.py.
+
 - [x] 0. Define the prediction task and verify a small reproducible Python environment.
 - [x] 1. Inspect shapes, dtypes, ranges, labels, alignment, and class counts.
 - [x] 2. Display every class and verify the image/vector round trip.
 - [x] Checkpoint A: explain data representation and alignment.
 - [x] 3. Save fixed stratified train/validation/test indices and verify integrity.
 - [x] 4. Calculate and evaluate the training-majority baseline on validation.
-- [ ] 5. Derive toy distances and votes manually, then verify them in code.
+- [x] 5. Derive toy distances and votes manually, then verify them in code.
 - [ ] 6. Fit initial KNN and trace a validation prediction to training neighbors.
 - [ ] Checkpoint B: explain data roles, distances, votes, and fitted state.
 - [ ] 7. Compare k=1,3,5,9 fairly and freeze the selected configuration.
