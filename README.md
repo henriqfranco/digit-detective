@@ -255,7 +255,7 @@ Run the new experiment script from the project folder:
 .venv/bin/python experiment.py
 ```
 
-The first run creates and saves the split. Later runs load the saved arrays without regenerating or rewriting them. Split setup itself fits no model; the script now also performs the baseline and initial KNN experiments described below. The inspection script stays focused on its original dataset exploration and figures.
+The first run creates and saves the split. Later runs load the saved arrays without regenerating or rewriting them. Split setup itself fits no model; the script now also performs the baseline and four-k comparison described below. The inspection script stays focused on its original dataset exploration and figures.
 
 ### Why three groups?
 
@@ -491,7 +491,7 @@ Run the existing experiment entry point:
 .venv/bin/python experiment.py
 ```
 
-It reloads the same saved partitions, evaluates the baseline, fits one provisional KNN configuration, evaluates it on validation, and saves a prediction trace. There is no comparison of multiple k values in this step, and test predictions remain reserved.
+Step 6 initially fitted one provisional configuration. The script now includes Step 7's four-k comparison and preserves the three-neighbor trace described here as the Step 6 illustration. Subsequent analysis uses the separately recorded selected configuration. Test predictions remain reserved.
 
 ### Configuration and fitting
 
@@ -561,7 +561,7 @@ These measurements use the exact same validation membership. The KNN result is a
 
 Artifacts:
 
-- `validation-results.csv` now contains both comparison rows with full-precision accuracy fractions.
+- At Step 6, `validation-results.csv` contained the baseline and k=3 rows. Step 7 extends it to all four candidates, with explicit error counts.
 - `knn-prediction-trace.json` contains configuration, query ID, true/predicted labels, neighbor training positions, original IDs, labels, distances, and votes.
 - `knn-prediction-trace.png` displays the query and the three voting training examples on the same fixed grayscale intensity scale.
 
@@ -580,6 +580,75 @@ To run the new focused check:
 Querying a fitted training image, especially with k=1, can retrieve that same image at distance zero. Such an easy familiar-example prediction is why training performance alone is insufficient for generalization claims. The illustrated query comes from validation and has a different original ID from every training member.
 
 Step 6 and Checkpoint B are complete. The learner identified labeled examples as KNN's retained fitted information, k as a chosen hyperparameter, and the requirement for all 64 image features. Query shape was clarified: (1,64) is one image with 64 features, whereas (64,1) is 64 samples with one feature each. Prior checkpoints established data roles, distance calculations, and voting; the digit prediction and its actual neighbors are verified. Step 7 will compare k=1,3,5,9 on the same validation partition without accessing test predictions.
+
+## Step 7: compare four k values and record the selected procedure
+
+The experiment now fits k=1,3,5,9 on the exact same 1,077 training examples and evaluates each on the same 360 clean validation examples. Only k changes; training order, validation order, raw pixel representation, Euclidean distance, uniform votes, and brute-force search remain fixed. No test predictions are produced.
+
+```sh
+.venv/bin/python experiment.py
+```
+
+### State the selection rule before seeing results
+
+Our original plan declared: highest clean validation accuracy wins; on an exact tie, choose the smaller k. The rule is implemented using integer correct counts because all candidates have the same denominator. It does not compare rounded display percentages. The smaller-k tie rule is a reproducible convention, not a claim that smaller neighborhoods always generalize better or produce simpler decision boundaries.
+
+### Measured results
+
+| k | Validation correct/total | Errors | Accuracy |
+| --- | --- | --- | --- |
+| 1 | 356/360 | 4 | 98.89% |
+| 3 | 353/360 | 7 | 98.06% |
+| 5 | 353/360 | 7 | 98.06% |
+| 9 | 351/360 | 9 | 97.50% |
+
+The baseline remains 37/360, or 10.28%. k=1 is selected because it has the highest score among the four candidates. k=3 and k=5 tie with each other, but neither ties the winning k=1 score. No tie-break was needed for the winner.
+
+k=1 gets three more examples correct overall than k=3, an accuracy gap of 3/360 times 100 = about 0.83 percentage points. One correct example changes validation accuracy by about 0.28 percentage points. The counts make the scale of the difference easier to judge than percentages alone. Equal aggregate accuracy also does not imply identical predictions or identical errors.
+
+### Why change only k?
+
+If we changed the validation images for each candidate, scores could change because the examples had different difficulty. If we changed preprocessing, metric, or weighting at the same time, we could not isolate the effect of neighborhood size. This is a controlled comparison: one factor changes while the comparison conditions stay fixed.
+
+The comparison function fits four models and retains their predictions and counts in a dictionary keyed by k. It reuses the already-fitted k=3 model for Step 6's saved illustration rather than fitting it a second time. The comparison rows and selection record refer to the same candidate measurements. Training examples are never expanded with validation examples during this comparison.
+
+### Intuition about neighborhood size
+
+At k=1, one closest training example determines the answer. An unusual or mislabeled example can strongly affect nearby predictions. Increasing k spreads the vote across more examples and can reduce sensitivity to one isolated example, but may also include examples from other classes and blur useful local distinctions.
+
+This relates to bias and variance: a coarse rule may systematically miss useful patterns (bias), while a sensitive rule can change substantially when its training examples change (variance). Variance in this sense is not random output from rerunning the same deterministic model. These are tendencies, not a guarantee that larger k wins or a direct measurement of theoretical bias/variance. Our observed ranking on this split favors k=1.
+
+### Why not try thousands of settings?
+
+Validation results guide development. With many attempts, we can select a configuration that happens to match this particular validation group's quirks. A fixed seed and repeated use of the same validation examples do not remove that selection effect. This is one reason the winning validation score is not a substitute for the final held-out evaluation.
+
+We keep the planned four-candidate search, choose by the stated rule, and retain an untouched test evaluation for later. We do not switch seeds, search more k values, or change preprocessing to chase a higher displayed score. More extensive studies may be useful later, but are not needed to understand this first controlled comparison.
+
+### Record the choice before test evaluation
+
+`artifacts/selected-model.json` records:
+
+- Selected constructor settings: k=1, Euclidean distance, uniform votes, brute-force search, plus the library defaults returned by get_params.
+- Raw-pixel representation, candidate k values, and the declared selection rule.
+- Validation correct count, denominator, and full-precision accuracy.
+- The final fitting policy: original training partition only, without a train-plus-validation refit.
+- Dataset and split-file identity and current Python/NumPy/scikit-learn versions.
+
+This is a recipe and provenance record, not a serialized fitted model. get_params records configuration; it does not contain the retained training examples. Future stages can rebuild the chosen classifier from the saved training membership and these settings.
+
+The fitting policy keeps the final test tied to the same original training pool used in this comparison. The reduced-training and corruption studies remain separate diagnostics using the chosen k. They will not silently replace the primary selected procedure.
+
+The freeze function writes this record once. An identical rerun leaves it unchanged; a different proposed record raises an error instead of silently replacing the frozen choice. If a later intentional study changes the procedure, it must be explicitly distinguished from this recorded experiment, especially after test outcomes have been inspected.
+
+`validation-results.csv` now contains five rows: the baseline and four KNN candidates, with correct counts, error counts, totals, and accuracy fractions. The original Step 6 JSON and image still illustrate k=3; they are not the selected-model record. Subsequent failure analysis must use selected-model.json's k=1.
+
+### Verification and learning checkpoint
+
+The existing KNN check now includes toy comparisons where k=1 wins a tie with k=9, and a separate case where k=3 wins a tie with k=5 while k=1 loses. It also checks idempotent selection recording and rejection of an attempted changed record without damaging the saved one. The KNN, baseline, and split checks passed.
+
+Actual experiment execution and a fresh-process rerun succeeded. The selected record's modification time stayed unchanged, and byte fingerprints confirmed that the saved splits and Step 6 trace artifacts stayed unchanged. Training accuracy, a larger search, and final test scoring were intentionally omitted from this step.
+
+Step 7 is complete: code and saved selection are verified, and the learner explained controlled comparison and the limits of a small lead. Validation overfitting was clarified as adapting configuration choices to repeated validation feedback: validation influences which k is selected, while fit still receives training data only. Step 8 will inspect the selected k=1 model's validation confusions and all four mistakes with their training neighbors; test evaluation remains reserved.
 
 ## References
 
@@ -600,3 +669,4 @@ Step 6 and Checkpoint B are complete. The learner identified labeled examples as
 - [NumPy maximum-position selection](https://numpy.org/doc/stable/reference/generated/numpy.argmax.html)
 - [Scikit-learn nearest-neighbor concepts](https://scikit-learn.org/stable/modules/neighbors.html)
 - [Scikit-learn KNeighborsClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html)
+- [Scikit-learn model-selection and held-out evaluation guidance](https://scikit-learn.org/stable/modules/cross_validation.html)

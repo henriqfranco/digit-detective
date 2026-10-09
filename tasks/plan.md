@@ -1,6 +1,6 @@
 # Digit Detective: learning and implementation plan
 
-Status: Steps 0 through 6 and Checkpoints A and B are complete. The learner identified labeled training examples as fitted state, k as a chosen hyperparameter, and the need for all 64 features in each query row. Initial KNN and its prediction trace are verified. Step 7 is next; hyperparameter comparison and test evaluation have not started.
+Status: Steps 0 through 7 and Checkpoints A and B are complete. k=1 and the original-training-only final fitting policy are recorded in selected-model.json. The learner explained controlled comparison, limits of a small validation lead, and validation's influence on hyperparameter selection rather than fit inputs. Step 8 is next; test evaluation has not started.
 
 ## Objective and learning contract
 

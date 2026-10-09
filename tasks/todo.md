@@ -14,6 +14,8 @@ Step 5 is complete: tiny-vector checks passed, and the learner calculated square
 
 Step 6 and Checkpoint B are complete: initial KNN and its saved trace passed verification. The learner identified retained labeled examples as fitted state, k=3 as a chosen hyperparameter, and the need for all 64 image features. Query shapes were clarified: (1,64) means one image with 64 features; (64,1) means 64 samples with one feature each. Validation remains 353/360 (98.06%); split files are unchanged and test prediction/evaluation remains reserved.
 
+Step 7 is complete: comparison and saved selection passed verification; k=1 wins at 356/360 (98.89%, 4 errors). The learner explained why changing validation groups confounds k comparisons, why a small lead does not guarantee future superiority, and that validation results influence k selection while fit still uses training examples only. The frozen fitting policy remains original-training-only, and test evaluation remains reserved.
+
 - [x] 0. Define the prediction task and verify a small reproducible Python environment.
 - [x] 1. Inspect shapes, dtypes, ranges, labels, alignment, and class counts.
 - [x] 2. Display every class and verify the image/vector round trip.
@@ -23,7 +25,7 @@ Step 6 and Checkpoint B are complete: initial KNN and its saved trace passed ver
 - [x] 5. Derive toy distances and votes manually, then verify them in code.
 - [x] 6. Fit initial KNN and trace a validation prediction to training neighbors.
 - [x] Checkpoint B: explain data roles, distances, votes, and fitted state.
-- [ ] 7. Compare k=1,3,5,9 fairly and freeze the selected configuration.
+- [x] 7. Compare k=1,3,5,9 fairly and freeze the selected configuration.
 - [ ] 8. Inspect validation confusions and actual mistakes with their neighbors.
 - [ ] 9. Build and visibly verify the prediction-and-neighbor viewer.
 - [ ] Checkpoint C: justify selection and explain correct and incorrect predictions.

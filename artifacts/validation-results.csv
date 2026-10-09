@@ -1,3 +1,6 @@
-model,configuration,correct,total,accuracy
-majority_class,always predict 1; lowest-label tie rule,37,360,0.10277777777777777
-knn,k=3; euclidean; uniform; brute; raw pixels,353,360,0.9805555555555555
+model,configuration,correct,errors,total,accuracy
+majority_class,always predict 1; lowest-label tie rule,37,323,360,0.10277777777777777
+knn,k=1; euclidean; uniform; brute; raw pixels,356,4,360,0.9888888888888889
+knn,k=3; euclidean; uniform; brute; raw pixels,353,7,360,0.9805555555555555
+knn,k=5; euclidean; uniform; brute; raw pixels,353,7,360,0.9805555555555555
+knn,k=9; euclidean; uniform; brute; raw pixels,351,9,360,0.975

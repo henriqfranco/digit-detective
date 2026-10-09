@@ -125,6 +125,33 @@ def trace_knn_prediction(model, query, X_train, y_train, training_indices):
     }
 
 
+def compare_knn_settings(X_train, y_train, X_validation, y_validation):
+    candidates = {}
+    for k in (1, 3, 5, 9):
+        model = KNeighborsClassifier(n_neighbors=k, metric="euclidean", weights="uniform", algorithm="brute")
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_validation)
+        correct = int(np.count_nonzero(predictions == y_validation))
+        candidates[k] = {
+            "model": model,
+            "predictions": predictions,
+            "correct": correct,
+            "total": len(y_validation),
+            "accuracy": correct / len(y_validation),
+        }
+    # Exact counts prevent rounded percentages from creating false ties.
+    chosen_k = min(candidates, key=lambda k: (-candidates[k]["correct"], k))
+    return candidates, chosen_k
+
+
+def freeze_selection(path, selection):
+    if path.exists():
+        if json.loads(path.read_text()) != selection:
+            raise ValueError("The recorded selection differs; review it before replacing the frozen procedure")
+    else:
+        path.write_text(json.dumps(selection, indent=2) + "\n")
+
+
 def main():
     digits = load_digits()
     X, y = digits.data, digits.target
@@ -168,24 +195,48 @@ def main():
         "model": "majority_class",
         "configuration": f"always predict {majority_label}; lowest-label tie rule",
         "correct": correct,
+        "errors": len(y_validation) - correct,
         "total": len(y_validation),
         "accuracy": accuracy,
     }]
 
-    model = KNeighborsClassifier(n_neighbors=3, metric="euclidean", weights="uniform", algorithm="brute")
-    model.fit(X_train, y_train)
-    predictions = model.predict(X_validation)
-    knn_correct = int(np.count_nonzero(predictions == y_validation))
-    knn_accuracy = accuracy_score(y_validation, predictions)
-    print("\nInitial KNN: k=3, Euclidean distance, uniform votes, raw pixels.")
-    print(f"Fitted on {len(X_train)} training images; validation {knn_correct}/{len(y_validation)} = {knn_accuracy:.2%}")
-    results.append({
-        "model": "knn",
-        "configuration": "k=3; euclidean; uniform; brute; raw pixels",
-        "correct": knn_correct,
-        "total": len(y_validation),
-        "accuracy": knn_accuracy,
-    })
+    candidates, selected_k = compare_knn_settings(X_train, y_train, X_validation, y_validation)
+    print("\nKNN comparison: same training/validation images, raw pixels, Euclidean distance, uniform votes.")
+    print("k  Correct/total  Errors  Accuracy")
+    for k, candidate in candidates.items():
+        errors = candidate["total"] - candidate["correct"]
+        print(f"{k}  {candidate['correct']}/{candidate['total']}           {errors:>2}  {candidate['accuracy']:.2%}")
+        results.append({
+            "model": "knn",
+            "configuration": f"k={k}; euclidean; uniform; brute; raw pixels",
+            "correct": candidate["correct"],
+            "errors": errors,
+            "total": candidate["total"],
+            "accuracy": candidate["accuracy"],
+        })
+
+    selected = candidates[selected_k]
+    selection = {
+        "model_parameters": selected["model"].get_params(),
+        "representation": "raw_pixels",
+        "candidate_k": list(candidates),
+        "selection_rule": "highest clean validation accuracy; smallest k on an exact tie",
+        "validation": {name: selected[name] for name in ("correct", "total", "accuracy")},
+        "final_fit_policy": "original_training_partition_only",
+        "dataset_digest": metadata["dataset_digest"],
+        "split_file_sha256": sha256((artifacts / "splits.npz").read_bytes()).hexdigest(),
+        "python": sys.version.split()[0],
+        "numpy": np.__version__,
+        "scikit_learn": sklearn.__version__,
+    }
+    selection_path = artifacts / "selected-model.json"
+    freeze_selection(selection_path, selection)
+    print(f"Selected k={selected_k}: highest validation accuracy, smaller k on an exact tie.")
+    print(f"Recorded original-training-only fitting policy: {selection_path}")
+
+    # Keep Step 6's three-neighbor illustration, reusing the already fitted model.
+    model = candidates[3]["model"]
+    predictions = candidates[3]["predictions"]
 
     # Trace the first saved validation sample, chosen independently of its result.
     query_index = int(splits["validation"][0])

@@ -1,0 +1,31 @@
+{
+  "model_parameters": {
+    "algorithm": "brute",
+    "leaf_size": 30,
+    "metric": "euclidean",
+    "metric_params": null,
+    "n_jobs": null,
+    "n_neighbors": 1,
+    "p": 2,
+    "weights": "uniform"
+  },
+  "representation": "raw_pixels",
+  "candidate_k": [
+    1,
+    3,
+    5,
+    9
+  ],
+  "selection_rule": "highest clean validation accuracy; smallest k on an exact tie",
+  "validation": {
+    "correct": 356,
+    "total": 360,
+    "accuracy": 0.9888888888888889
+  },
+  "final_fit_policy": "original_training_partition_only",
+  "dataset_digest": "f6d9e39f37dc45d327f6db33428ee58970ccceabb2535a5c179de35886b70443",
+  "split_file_sha256": "b4e17e07a51095fc706a1ea172139824cd69f4e74138a4f0fdb072ce13a6fb46",
+  "python": "3.14.4",
+  "numpy": "2.5.3",
+  "scikit_learn": "1.9.1"
+}
