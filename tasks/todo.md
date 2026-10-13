@@ -16,7 +16,9 @@ Step 6 and Checkpoint B are complete: initial KNN and its saved trace passed ver
 
 Step 7 is complete: comparison and saved selection passed verification; k=1 wins at 356/360 (98.89%, 4 errors). The learner explained why changing validation groups confounds k comparisons, why a small lead does not guarantee future superiority, and that validation results influence k selection while fit still uses training examples only. The frozen fitting policy remains original-training-only, and test evaluation remains reserved.
 
-Step 8 implementation is verified: selected k=1 reproduces 356/360, with one error each for 8->1, 8->3, 9->1, 9->3. Count and row-percentage plots, class metrics, every mistake's neighbor trace, and a correct comparison are saved and visually inspected. The metric check passed, and earlier artifacts remain byte-for-byte unchanged. Only training and validation were used for fitting/predictions. The learning checkpoint is pending, so the step stays unchecked.
+Step 8 is complete: selected-model analysis is verified, and the learner interpreted true/predicted matrix directions, correctly calculated recall and precision after review, and explained one-neighbor and multi-neighbor votes. Earlier artifacts remain unchanged. Test evaluation remains reserved.
+
+Step 9 implementation is verified: viewer.py uses the shared selected-experiment loader and existing trace function; all-validation/mistakes filtering, Previous/Next, arrow keys, and M work. Checks cover wrapping, matching images/IDs, and no mistakes. Correct/mistake snapshots and a live screenshot are saved. WebAgg requires the newly recorded Tornado dependency; it binds to localhost. The learning checkpoint is pending, so Step 9 and Checkpoint C stay unchecked.
 
 - [x] 0. Define the prediction task and verify a small reproducible Python environment.
 - [x] 1. Inspect shapes, dtypes, ranges, labels, alignment, and class counts.
@@ -28,7 +30,7 @@ Step 8 implementation is verified: selected k=1 reproduces 356/360, with one err
 - [x] 6. Fit initial KNN and trace a validation prediction to training neighbors.
 - [x] Checkpoint B: explain data roles, distances, votes, and fitted state.
 - [x] 7. Compare k=1,3,5,9 fairly and freeze the selected configuration.
-- [ ] 8. Inspect validation confusions and actual mistakes with their neighbors.
+- [x] 8. Inspect validation confusions and actual mistakes with their neighbors.
 - [ ] 9. Build and visibly verify the prediction-and-neighbor viewer.
 - [ ] Checkpoint C: justify selection and explain correct and incorrect predictions.
 - [ ] 10. Compare fixed-k performance with nested stratified training subsets.

@@ -31,8 +31,7 @@ def summarize_predictions(y_true, y_pred):
     }
 
 
-def main():
-    artifacts = Path(__file__).resolve().parent / "artifacts"
+def load_selected_experiment(artifacts):
     selection = json.loads((artifacts / "selected-model.json").read_text())
     if selection["representation"] != "raw_pixels" or selection["final_fit_policy"] != "original_training_partition_only":
         raise ValueError("This analysis requires the recorded raw-pixel, training-only procedure")
@@ -49,10 +48,20 @@ def main():
     model = KNeighborsClassifier(**selection["model_parameters"])
     model.fit(X_train, y_train)
     predictions = model.predict(X_validation)
-    summary = summarize_predictions(y_validation, predictions)
-    correct = int(summary["correct"].sum())
+    correct = int(np.count_nonzero(predictions == y_validation))
     if correct != selection["validation"]["correct"] or len(validation) != selection["validation"]["total"]:
         raise ValueError("Validation results no longer reproduce the recorded selection")
+    return digits, splits, selection, model, predictions
+
+
+def main():
+    artifacts = Path(__file__).resolve().parent / "artifacts"
+    digits, splits, selection, model, predictions = load_selected_experiment(artifacts)
+    training, validation = splits["train"], splits["validation"]
+    X_train, y_train = digits.data[training], digits.target[training]
+    X_validation, y_validation = digits.data[validation], digits.target[validation]
+    summary = summarize_predictions(y_validation, predictions)
+    correct = int(summary["correct"].sum())
 
     print(f"Selected k={model.n_neighbors}: validation {correct}/{len(validation)}, {len(summary['wrong_rows'])} mistakes.")
     print("Rows are true labels; columns are predicted labels.")

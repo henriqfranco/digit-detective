@@ -673,7 +673,30 @@ The four mistakes are 794: 8->1, 1038: 9->3, 683: 9->1, and 899: 8->3. At k=1 ea
 
 Recall asks how many actual members of a class were found; precision asks how many predictions of that class were correct. For class 1, recall is 37/37=100%, but precision is 37/39=94.87% because an eight and a nine were also called one. For class 8, recall is 33/35=94.29%, while precision is 33/33=100%.
 
-The matrix sums to 360; its diagonal sums to 356 and its other cells to 4. Toy checks verify direction, normalization, wrong-row identification, both ratios, perfect predictions, and undefined ratios for absent classes. All traces reproduce model predictions and verify distances and training-only neighbor IDs. The three figures were visually inspected. Step 8 implementation is verified; the learning checkpoint remains pending.
+The matrix sums to 360; its diagonal sums to 356 and its other cells to 4. Toy checks verify direction, normalization, wrong-row identification, both ratios, perfect predictions, and undefined ratios for absent classes. All traces reproduce model predictions and verify distances and training-only neighbor IDs. The three figures were visually inspected. Step 8's walkthrough is complete: the learner interpreted an off-diagonal cell, distinguished recall's actual-class denominator from precision's predicted-class denominator, and explained a neighbor-label vote.
+
+## Step 9: browse predictions and voting neighbors
+
+```sh
+.venv/bin/python viewer.py
+```
+
+Open the local URL printed by the program, normally http://127.0.0.1:8988/. Keep the program running while browsing; Ctrl+C in its terminal stops the viewer. The viewer uses Matplotlib's WebAgg display and listens only on 127.0.0.1. This environment lacks desktop plotting bindings, so requirements now include Tornado 6.5.10, the support dependency needed by that built-in display.
+
+Controls:
+
+- Previous/Next browse the selected collection and wrap at its ends.
+- Mistakes only switches between all 360 validation images and the four errors.
+- Left/right arrows navigate and M toggles the filter when the figure has keyboard focus.
+- Matplotlib's download toolbar exports the displayed figure.
+
+The viewer shows original query IDs, actual/predicted labels, correctness, the exact k, every voting neighbor's original ID and training-row position, Euclidean distances, and vote counts. An empty mistakes collection shows an explanatory message and no stale images; navigation becomes a no-op until the filter is cleared. Votes are labeled as agreement, not calibrated confidence.
+
+`load_selected_experiment` was extracted from analyze_errors.py because both analysis and the viewer now need the same setup. Its dataset/split identity checks, training-only fit policy, and reproduction check remain intact. Startup fits the recorded k=1 model once and obtains validation predictions. Navigation calls the existing trace_knn_prediction function; it does not refit or search settings. Filtering uses those predictions and known validation labels only to choose which queries to display. Test browsing is unavailable during development.
+
+Startup saves `viewer-correct-example.png` and `viewer-mistake-example.png` for the report. `viewer-live.jpg` records the verified live interface. Run the callback/state check with `.venv/bin/python check_viewer.py`: it covers navigation, wrapping, the four errors, image/ID alignment, and an empty mistakes collection. Mouse controls, arrow navigation, and M were also verified in the browser. Existing KNN, baseline, split, and metric checks passed; error analysis was rerun to verify the shared-loading change. Earlier JSON, split, and CSV records remain unchanged.
+
+Step 9 implementation is verified; its understanding checkpoint and Checkpoint C remain pending. Explain what happens on startup versus when moving to another image, and why changing the displayed collection does not change the fitted classifier.
 
 ## References
 
@@ -697,3 +720,4 @@ The matrix sums to 360; its diagonal sums to 356 and its other cells to 4. Toy c
 - [Scikit-learn model-selection and held-out evaluation guidance](https://scikit-learn.org/stable/modules/cross_validation.html)
 - [Confusion matrix definition](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html)
 - [Precision and recall definitions](https://scikit-learn.org/stable/modules/model_evaluation.html#precision-recall-and-f-measures)
+- [Matplotlib interactive displays and WebAgg](https://matplotlib.org/stable/users/explain/figure/backends.html)
