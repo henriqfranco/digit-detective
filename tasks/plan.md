@@ -1,6 +1,6 @@
 # Digit Detective: learning and implementation plan
 
-Status: Steps 0 through 7 and Checkpoints A and B are complete. k=1 and the original-training-only final fitting policy are recorded in selected-model.json. The learner explained controlled comparison, limits of a small validation lead, and validation's influence on hyperparameter selection rather than fit inputs. Step 8 is next; test evaluation has not started.
+Status: Steps 0 through 7 and Checkpoints A and B are complete. Step 8 selected-model analysis is implemented and verified: count/percentage confusion plots, per-class ratios, and all four validation mistakes with voting neighbors plus a correct comparison. Its learning checkpoint remains pending. Frozen selection and prior artifacts are unchanged; test evaluation has not started.
 
 ## Objective and learning contract
 

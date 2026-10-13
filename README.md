@@ -650,6 +650,31 @@ Actual experiment execution and a fresh-process rerun succeeded. The selected re
 
 Step 7 is complete: code and saved selection are verified, and the learner explained controlled comparison and the limits of a small lead. Validation overfitting was clarified as adapting configuration choices to repeated validation feedback: validation influences which k is selected, while fit still receives training data only. Step 8 will inspect the selected k=1 model's validation confusions and all four mistakes with their training neighbors; test evaluation remains reserved.
 
+## Step 8: validation confusions and failure gallery
+
+Run the selected-model analysis and its small correctness check:
+
+```sh
+.venv/bin/python analyze_errors.py
+.venv/bin/python check_errors.py
+```
+
+The analysis reads the frozen model recipe and saved partitions, checks their identities, fits only the original training examples, and reproduces 356/360 validation successes. It does not search settings or evaluate test examples. The existing experiment, selection, split, comparison table, and Step 6 illustration remain unchanged.
+
+Saved artifacts:
+
+- `validation-confusion-counts.png`: true digit on rows, predicted digit on columns; diagonal cells are correct predictions.
+- `validation-confusion-percent.png`: each count divided by its true-class row total, displayed as a percentage. This changes the report, not model inputs.
+- `validation-per-class.csv`: actual counts, predicted counts, correct/missed counts, recall, and precision. Ratios are stored as fractions; undefined ratios have empty cells.
+- `validation-failure-gallery.png`: all four mistakes in saved validation order, with every voting neighbor, followed by the first correct validation example for comparison. There are fewer than six mistakes, so all available mistakes are shown.
+- `validation-error-report.json`: matrix data, frozen selection provenance, original sample IDs, neighbor labels/distances, votes, and true/predicted labels.
+
+The four mistakes are 794: 8->1, 1038: 9->3, 683: 9->1, and 899: 8->3. At k=1 each query has one voting training neighbor. A claim about a stroke's visual resemblance is a hypothesis; the verified mechanism is selecting the closest pixel vector and copying its label. These cases do not justify relabeling data or retuning the frozen procedure.
+
+Recall asks how many actual members of a class were found; precision asks how many predictions of that class were correct. For class 1, recall is 37/37=100%, but precision is 37/39=94.87% because an eight and a nine were also called one. For class 8, recall is 33/35=94.29%, while precision is 33/33=100%.
+
+The matrix sums to 360; its diagonal sums to 356 and its other cells to 4. Toy checks verify direction, normalization, wrong-row identification, both ratios, perfect predictions, and undefined ratios for absent classes. All traces reproduce model predictions and verify distances and training-only neighbor IDs. The three figures were visually inspected. Step 8 implementation is verified; the learning checkpoint remains pending.
+
 ## References
 
 - [Scikit-learn installation guidance](https://scikit-learn.org/stable/install.html)
@@ -670,3 +695,5 @@ Step 7 is complete: code and saved selection are verified, and the learner expla
 - [Scikit-learn nearest-neighbor concepts](https://scikit-learn.org/stable/modules/neighbors.html)
 - [Scikit-learn KNeighborsClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html)
 - [Scikit-learn model-selection and held-out evaluation guidance](https://scikit-learn.org/stable/modules/cross_validation.html)
+- [Confusion matrix definition](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html)
+- [Precision and recall definitions](https://scikit-learn.org/stable/modules/model_evaluation.html#precision-recall-and-f-measures)

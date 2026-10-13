@@ -16,6 +16,8 @@ Step 6 and Checkpoint B are complete: initial KNN and its saved trace passed ver
 
 Step 7 is complete: comparison and saved selection passed verification; k=1 wins at 356/360 (98.89%, 4 errors). The learner explained why changing validation groups confounds k comparisons, why a small lead does not guarantee future superiority, and that validation results influence k selection while fit still uses training examples only. The frozen fitting policy remains original-training-only, and test evaluation remains reserved.
 
+Step 8 implementation is verified: selected k=1 reproduces 356/360, with one error each for 8->1, 8->3, 9->1, 9->3. Count and row-percentage plots, class metrics, every mistake's neighbor trace, and a correct comparison are saved and visually inspected. The metric check passed, and earlier artifacts remain byte-for-byte unchanged. Only training and validation were used for fitting/predictions. The learning checkpoint is pending, so the step stays unchecked.
+
 - [x] 0. Define the prediction task and verify a small reproducible Python environment.
 - [x] 1. Inspect shapes, dtypes, ranges, labels, alignment, and class counts.
 - [x] 2. Display every class and verify the image/vector round trip.
