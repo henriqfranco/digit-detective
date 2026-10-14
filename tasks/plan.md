@@ -1,6 +1,6 @@
 # Digit Detective: learning and implementation plan
 
-Status: Steps 0 through 8 and Checkpoints A and B are complete. Step 9 validation-only Matplotlib viewer is implemented and verified with live mouse/keyboard controls and saved examples. Its learning checkpoint and Checkpoint C remain pending. Frozen selection and prior records are unchanged; test evaluation has not started.
+Status: Steps 0 through 10 and Checkpoints A, B, and C are complete, including Step 10's implementation and learning checkpoint. Step 11's noise and translation experiments are next and have not started. Frozen selection and prior records are unchanged; test evaluation has not started.
 
 ## Objective and learning contract
 

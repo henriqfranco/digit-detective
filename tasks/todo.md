@@ -18,7 +18,9 @@ Step 7 is complete: comparison and saved selection passed verification; k=1 wins
 
 Step 8 is complete: selected-model analysis is verified, and the learner interpreted true/predicted matrix directions, correctly calculated recall and precision after review, and explained one-neighbor and multi-neighbor votes. Earlier artifacts remain unchanged. Test evaluation remains reserved.
 
-Step 9 implementation is verified: viewer.py uses the shared selected-experiment loader and existing trace function; all-validation/mistakes filtering, Previous/Next, arrow keys, and M work. Checks cover wrapping, matching images/IDs, and no mistakes. Correct/mistake snapshots and a live screenshot are saved. WebAgg requires the newly recorded Tornado dependency; it binds to localhost. The learning checkpoint is pending, so Step 9 and Checkpoint C stay unchecked.
+Step 9 and Checkpoint C are complete: viewer.py uses the shared selected-experiment loader and existing trace function; all-validation/mistakes filtering, Previous/Next, arrow keys, and M work. Checks cover wrapping, matching images/IDs, and no mistakes. Correct/mistake snapshots and a live screenshot are saved. WebAgg requires the recorded Tornado dependency; it binds to localhost. The learner explained that navigation uses the existing fitted model; selection and interpretation were covered in earlier checkpoints.
+
+Step 10 is complete: seed-42 nested class-stratified pools contain 109, 268, 537, and 1,077 original training IDs. With fixed k=1 and unchanged clean validation queries, they score 331, 345, 352, and 356 correct out of 360. Saved indices, exact class counts, table, and plot are reproducible. Toy and real checks cover nesting, training-only membership, ordering, class coverage, unchanged inputs/full-model predictions, and saved-index reload. The learner explained why changing two factors confounds the comparison and why more training examples do not guarantee better predictions. Earlier selection/split/result records are unchanged; test evaluation remains reserved. Step 11 is next and has not started.
 
 - [x] 0. Define the prediction task and verify a small reproducible Python environment.
 - [x] 1. Inspect shapes, dtypes, ranges, labels, alignment, and class counts.
@@ -31,9 +33,9 @@ Step 9 implementation is verified: viewer.py uses the shared selected-experiment
 - [x] Checkpoint B: explain data roles, distances, votes, and fitted state.
 - [x] 7. Compare k=1,3,5,9 fairly and freeze the selected configuration.
 - [x] 8. Inspect validation confusions and actual mistakes with their neighbors.
-- [ ] 9. Build and visibly verify the prediction-and-neighbor viewer.
-- [ ] Checkpoint C: justify selection and explain correct and incorrect predictions.
-- [ ] 10. Compare fixed-k performance with nested stratified training subsets.
+- [x] 9. Build and visibly verify the prediction-and-neighbor viewer.
+- [x] Checkpoint C: justify selection and explain correct and incorrect predictions.
+- [x] 10. Compare fixed-k performance with nested stratified training subsets.
 - [ ] 11. Evaluate separate noise and zero-filled translation experiments on copies.
 - [ ] 12. Evaluate the frozen model on test; finish gallery, report, and fresh-process reproduction.
 - [ ] Final learning checkpoint: meet the ready-to-advance criteria without an accuracy target.

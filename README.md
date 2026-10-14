@@ -696,7 +696,40 @@ The viewer shows original query IDs, actual/predicted labels, correctness, the e
 
 Startup saves `viewer-correct-example.png` and `viewer-mistake-example.png` for the report. `viewer-live.jpg` records the verified live interface. Run the callback/state check with `.venv/bin/python check_viewer.py`: it covers navigation, wrapping, the four errors, image/ID alignment, and an empty mistakes collection. Mouse controls, arrow navigation, and M were also verified in the browser. Existing KNN, baseline, split, and metric checks passed; error analysis was rerun to verify the shared-loading change. Earlier JSON, split, and CSV records remain unchanged.
 
-Step 9 implementation is verified; its understanding checkpoint and Checkpoint C remain pending. Explain what happens on startup versus when moving to another image, and why changing the displayed collection does not change the fitted classifier.
+Step 9 and Checkpoint C are complete: the learner explained that navigation uses the existing fitted model, following the earlier selection, confusion-matrix, and neighbor-vote walkthroughs.
+
+## Step 10: fewer training examples, fixed k
+
+```sh
+.venv/bin/python check_learning_curve.py
+.venv/bin/python learning_curve.py
+```
+
+This diagnostic changes the available training examples while keeping k=1, raw pixels, Euclidean distance, uniform votes, and the same 360 clean validation queries. It does not select another configuration. The full-training model loaded by the shared helper is retained; smaller models are separate objects.
+
+| Requested training fraction | Actual training count | Validation correct | Accuracy |
+| --- | --- | --- | --- |
+| 10% | 109 | 331/360 | 91.94% |
+| 25% | 268 | 345/360 | 95.83% |
+| 50% | 537 | 352/360 | 97.78% |
+| 100% | 1,077 | 356/360 | 98.89% |
+
+The percentage applies to the 1,077 training examples, not all 1,797 dataset examples. For each digit separately, NumPy's seeded generator (seed 42) permutes its training IDs once. Each size takes a prefix of that same per-class ordering. The number taken is the class count times the fraction, rounded to the nearest integer (exact half ties round to even), with at least one example per class. Adding these rounded class counts gives the actual totals above. Each resulting pool keeps the original training-relative order, including the unchanged 100% pool.
+
+Consequently, the smaller pools are nested inside the larger ones and retain approximate class proportions. This controls class composition and avoids replacing previously included examples when increasing size; it does not remove sampling uncertainty. Preserving original order also avoids changing ordering as an extra factor in equally distant neighbor selection. Saved indices preserve membership more directly than the seed alone.
+
+At k=1 a query gets one vote even when the search collection contains 1,077 images. More training data can provide closer examples of varied handwriting; it does not automatically increase the number of votes or create new features. Our observed curve improves as this particular collection grows, with gains of 14, 7, and 4 additional correct validation predictions. These observations do not prove that every larger collection performs better or that the curve transfers to other handwriting.
+
+Outputs in artifacts:
+
+- `training-subsets.npz`: original training IDs for each of the four pools.
+- `training-size-results.csv`: exact sizes, correct/total, and accuracy.
+- `training-size-report.json`: original selection provenance, subset procedure/seed, exact class counts in digit order 0..9, and results.
+- `learning-curve.png`: validation accuracy against actual training count, with a full percentage scale and exact point labels. Connecting lines guide reading; intermediate sizes were not measured.
+
+The toy check covers unequal class sizes, nested membership, rounding, class coverage, repeatability, original ordering, and unchanged inputs. The real experiment checks training-only membership, exclusion of validation/test IDs, sufficient size for k, class coverage, archive reload, unchanged validation inputs, and unchanged full-model predictions. Earlier selection, split, comparison, and error-analysis records are unchanged. No test predictions were generated.
+
+Step 10 is complete: implementation is verified, and the learner explained why changing training size and k together would obscure their separate effects, and why additional training examples can sometimes worsen predictions. Even correctly labeled new examples can change the nearest neighbor to an incorrect class. This is one seeded subset sequence, without repeated-seed uncertainty estimates or separate k searches at each size. Step 11's noise and translation experiments are next and have not started; the final test partition remains unevaluated.
 
 ## References
 
@@ -721,3 +754,5 @@ Step 9 implementation is verified; its understanding checkpoint and Checkpoint C
 - [Confusion matrix definition](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html)
 - [Precision and recall definitions](https://scikit-learn.org/stable/modules/model_evaluation.html#precision-recall-and-f-measures)
 - [Matplotlib interactive displays and WebAgg](https://matplotlib.org/stable/users/explain/figure/backends.html)
+- [Scikit-learn learning curves](https://scikit-learn.org/stable/modules/learning_curve.html)
+- [NumPy seeded generators and permutations](https://numpy.org/doc/stable/reference/random/generator.html)

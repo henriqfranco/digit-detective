@@ -1,0 +1,130 @@
+{
+  "partition": "validation",
+  "selection": {
+    "model_parameters": {
+      "algorithm": "brute",
+      "leaf_size": 30,
+      "metric": "euclidean",
+      "metric_params": null,
+      "n_jobs": null,
+      "n_neighbors": 1,
+      "p": 2,
+      "weights": "uniform"
+    },
+    "representation": "raw_pixels",
+    "candidate_k": [
+      1,
+      3,
+      5,
+      9
+    ],
+    "selection_rule": "highest clean validation accuracy; smallest k on an exact tie",
+    "validation": {
+      "correct": 356,
+      "total": 360,
+      "accuracy": 0.9888888888888889
+    },
+    "final_fit_policy": "original_training_partition_only",
+    "dataset_digest": "f6d9e39f37dc45d327f6db33428ee58970ccceabb2535a5c179de35886b70443",
+    "split_file_sha256": "b4e17e07a51095fc706a1ea172139824cd69f4e74138a4f0fdb072ce13a6fb46",
+    "python": "3.14.4",
+    "numpy": "2.5.3",
+    "scikit_learn": "1.9.1"
+  },
+  "subset_seed": 42,
+  "sampling": "one NumPy default_rng permutation per class; nested prefixes; original training order",
+  "rounding": "nearest integer per class (ties to even), minimum one",
+  "label_order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "class_counts": {
+    "train_10pct": [
+      11,
+      11,
+      11,
+      11,
+      11,
+      11,
+      11,
+      11,
+      10,
+      11
+    ],
+    "train_25pct": [
+      26,
+      27,
+      27,
+      27,
+      27,
+      27,
+      27,
+      27,
+      26,
+      27
+    ],
+    "train_50pct": [
+      53,
+      54,
+      54,
+      54,
+      54,
+      54,
+      54,
+      54,
+      52,
+      54
+    ],
+    "train_100pct": [
+      106,
+      109,
+      107,
+      109,
+      109,
+      109,
+      109,
+      107,
+      104,
+      108
+    ]
+  },
+  "results": [
+    {
+      "fraction": 0.1,
+      "training_count": 109,
+      "correct": 331,
+      "total": 360,
+      "accuracy": 0.9194444444444444
+    },
+    {
+      "fraction": 0.25,
+      "training_count": 268,
+      "correct": 345,
+      "total": 360,
+      "accuracy": 0.9583333333333334
+    },
+    {
+      "fraction": 0.5,
+      "training_count": 537,
+      "correct": 352,
+      "total": 360,
+      "accuracy": 0.9777777777777777
+    },
+    {
+      "fraction": 1.0,
+      "training_count": 1077,
+      "correct": 356,
+      "total": 360,
+      "accuracy": 0.9888888888888889
+    }
+  ],
+  "limitation": "one seeded nested subset sequence; no uncertainty estimate or k retuning"
+}
