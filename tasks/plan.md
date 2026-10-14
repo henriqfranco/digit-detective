@@ -1,12 +1,14 @@
 # Digit Detective: learning and implementation plan
 
-Status: Steps 0 through 10 and Checkpoints A, B, and C are complete, including Step 10's implementation and learning checkpoint. Step 11's noise and translation experiments are next and have not started. Frozen selection and prior records are unchanged; test evaluation has not started.
+Status: Steps 0 through 11 and Checkpoints A, B, and C are complete, including Step 11's implementation and learning checkpoint. Step 12's held-out test evaluation and final report are next and have not started. Frozen selection and prior records are unchanged; test evaluation has not started.
 
 ## Objective and learning contract
 
 Build a program that displays a handwritten digit, predicts its class, and shows the training neighbors whose votes produced the prediction. Finish with a failure gallery and a one-page explanation. The purpose is understanding the complete machine-learning workflow, not reaching an accuracy target.
 
 We will work sequentially, one small lesson and implementation slice at a time. Before each slice: explain the question, define new terms, predict the outcome, and justify the decision. Then write a small amount of code, run it, inspect the actual output, and explain it back in ordinary language. A working result without an explanation is an unfinished learning step. An unexpected result becomes something to investigate, not something to hide.
+
+When the learner completes an explain-back checkpoint, update the README, plan status, and progress checklist in that same turn without waiting for a reminder. Keep the checkpoint pending while its questions are still being discussed. Conceptual reviews stay in chat; completing a checkpoint authorizes the corresponding documentation update, not unrelated code changes.
 
 For each decision, distinguish:
 

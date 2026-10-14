@@ -1,0 +1,5 @@
+condition,correct,total,accuracy,errors,newly_wrong,recovered
+clean,356,360,0.9888888888888889,4,0,0
+noise_1,355,360,0.9861111111111112,5,1,0
+noise_2,354,360,0.9833333333333333,6,2,0
+noise_4,342,360,0.95,18,15,1

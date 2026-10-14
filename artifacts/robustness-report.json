@@ -1,0 +1,255 @@
+{
+  "partition": "validation",
+  "selection": {
+    "model_parameters": {
+      "algorithm": "brute",
+      "leaf_size": 30,
+      "metric": "euclidean",
+      "metric_params": null,
+      "n_jobs": null,
+      "n_neighbors": 1,
+      "p": 2,
+      "weights": "uniform"
+    },
+    "representation": "raw_pixels",
+    "candidate_k": [
+      1,
+      3,
+      5,
+      9
+    ],
+    "selection_rule": "highest clean validation accuracy; smallest k on an exact tie",
+    "validation": {
+      "correct": 356,
+      "total": 360,
+      "accuracy": 0.9888888888888889
+    },
+    "final_fit_policy": "original_training_partition_only",
+    "dataset_digest": "f6d9e39f37dc45d327f6db33428ee58970ccceabb2535a5c179de35886b70443",
+    "split_file_sha256": "b4e17e07a51095fc706a1ea172139824cd69f4e74138a4f0fdb072ce13a6fb46",
+    "python": "3.14.4",
+    "numpy": "2.5.3",
+    "scikit_learn": "1.9.1"
+  },
+  "noise_seed": 42,
+  "noise": "clip(clean + sigma * shared standard normal array, 0, 16); sigma=1,2,4",
+  "translation": "independent one-pixel shifts of clean images; zero fill; crop outgoing pixels",
+  "case_selection": "first newly wrong validation row per condition; otherwise first error, if any",
+  "results": [
+    {
+      "condition": "clean",
+      "correct": 356,
+      "total": 360,
+      "accuracy": 0.9888888888888889,
+      "errors": 4,
+      "newly_wrong": 0,
+      "recovered": 0
+    },
+    {
+      "condition": "noise_1",
+      "correct": 355,
+      "total": 360,
+      "accuracy": 0.9861111111111112,
+      "errors": 5,
+      "newly_wrong": 1,
+      "recovered": 0
+    },
+    {
+      "condition": "noise_2",
+      "correct": 354,
+      "total": 360,
+      "accuracy": 0.9833333333333333,
+      "errors": 6,
+      "newly_wrong": 2,
+      "recovered": 0
+    },
+    {
+      "condition": "noise_4",
+      "correct": 342,
+      "total": 360,
+      "accuracy": 0.95,
+      "errors": 18,
+      "newly_wrong": 15,
+      "recovered": 1
+    },
+    {
+      "condition": "shift_left",
+      "correct": 224,
+      "total": 360,
+      "accuracy": 0.6222222222222222,
+      "errors": 136,
+      "newly_wrong": 132,
+      "recovered": 0
+    },
+    {
+      "condition": "shift_right",
+      "correct": 220,
+      "total": 360,
+      "accuracy": 0.6111111111111112,
+      "errors": 140,
+      "newly_wrong": 137,
+      "recovered": 1
+    },
+    {
+      "condition": "shift_up",
+      "correct": 250,
+      "total": 360,
+      "accuracy": 0.6944444444444444,
+      "errors": 110,
+      "newly_wrong": 106,
+      "recovered": 0
+    },
+    {
+      "condition": "shift_down",
+      "correct": 244,
+      "total": 360,
+      "accuracy": 0.6777777777777778,
+      "errors": 116,
+      "newly_wrong": 113,
+      "recovered": 1
+    }
+  ],
+  "failure_cases": [
+    {
+      "prediction": 3,
+      "neighbors": [
+        {
+          "training_row": 112,
+          "dataset_index": 1513,
+          "label": 3,
+          "distance": 21.96822118744151
+        }
+      ],
+      "votes": {
+        "3": 1
+      },
+      "condition": "noise_1",
+      "validation_row": 38,
+      "query_dataset_index": 942,
+      "true_label": 9,
+      "clean_prediction": 9,
+      "newly_wrong": true
+    },
+    {
+      "prediction": 7,
+      "neighbors": [
+        {
+          "training_row": 853,
+          "dataset_index": 112,
+          "label": 7,
+          "distance": 24.440669618617193
+        }
+      ],
+      "votes": {
+        "7": 1
+      },
+      "condition": "noise_2",
+      "validation_row": 34,
+      "query_dataset_index": 746,
+      "true_label": 4,
+      "clean_prediction": 4,
+      "newly_wrong": true
+    },
+    {
+      "prediction": 2,
+      "neighbors": [
+        {
+          "training_row": 736,
+          "dataset_index": 700,
+          "label": 2,
+          "distance": 29.070682672082217
+        }
+      ],
+      "votes": {
+        "2": 1
+      },
+      "condition": "noise_4",
+      "validation_row": 21,
+      "query_dataset_index": 1538,
+      "true_label": 8,
+      "clean_prediction": 8,
+      "newly_wrong": true
+    },
+    {
+      "prediction": 5,
+      "neighbors": [
+        {
+          "training_row": 305,
+          "dataset_index": 33,
+          "label": 5,
+          "distance": 37.30951621235526
+        }
+      ],
+      "votes": {
+        "5": 1
+      },
+      "condition": "shift_left",
+      "validation_row": 0,
+      "query_dataset_index": 1686,
+      "true_label": 9,
+      "clean_prediction": 9,
+      "newly_wrong": true
+    },
+    {
+      "prediction": 1,
+      "neighbors": [
+        {
+          "training_row": 145,
+          "dataset_index": 312,
+          "label": 1,
+          "distance": 27.53179979587241
+        }
+      ],
+      "votes": {
+        "1": 1
+      },
+      "condition": "shift_right",
+      "validation_row": 1,
+      "query_dataset_index": 171,
+      "true_label": 4,
+      "clean_prediction": 4,
+      "newly_wrong": true
+    },
+    {
+      "prediction": 4,
+      "neighbors": [
+        {
+          "training_row": 29,
+          "dataset_index": 198,
+          "label": 4,
+          "distance": 34.322004603461025
+        }
+      ],
+      "votes": {
+        "4": 1
+      },
+      "condition": "shift_up",
+      "validation_row": 2,
+      "query_dataset_index": 1600,
+      "true_label": 2,
+      "clean_prediction": 2,
+      "newly_wrong": true
+    },
+    {
+      "prediction": 1,
+      "neighbors": [
+        {
+          "training_row": 177,
+          "dataset_index": 1471,
+          "label": 1,
+          "distance": 35.11409973215888
+        }
+      ],
+      "votes": {
+        "1": 1
+      },
+      "condition": "shift_down",
+      "validation_row": 0,
+      "query_dataset_index": 1686,
+      "true_label": 9,
+      "clean_prediction": 9,
+      "newly_wrong": true
+    }
+  ],
+  "limitation": "one noise realization; intended labels retained even if corruption harms legibility"
+}

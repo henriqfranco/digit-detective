@@ -20,7 +20,9 @@ Step 8 is complete: selected-model analysis is verified, and the learner interpr
 
 Step 9 and Checkpoint C are complete: viewer.py uses the shared selected-experiment loader and existing trace function; all-validation/mistakes filtering, Previous/Next, arrow keys, and M work. Checks cover wrapping, matching images/IDs, and no mistakes. Correct/mistake snapshots and a live screenshot are saved. WebAgg requires the recorded Tornado dependency; it binds to localhost. The learner explained that navigation uses the existing fitted model; selection and interpretation were covered in earlier checkpoints.
 
-Step 10 is complete: seed-42 nested class-stratified pools contain 109, 268, 537, and 1,077 original training IDs. With fixed k=1 and unchanged clean validation queries, they score 331, 345, 352, and 356 correct out of 360. Saved indices, exact class counts, table, and plot are reproducible. Toy and real checks cover nesting, training-only membership, ordering, class coverage, unchanged inputs/full-model predictions, and saved-index reload. The learner explained why changing two factors confounds the comparison and why more training examples do not guarantee better predictions. Earlier selection/split/result records are unchanged; test evaluation remains reserved. Step 11 is next and has not started.
+Step 10 is complete: seed-42 nested class-stratified pools contain 109, 268, 537, and 1,077 original training IDs. With fixed k=1 and unchanged clean validation queries, they score 331, 345, 352, and 356 correct out of 360. Saved indices, exact class counts, table, and plot are reproducible. Toy and real checks cover nesting, training-only membership, ordering, class coverage, unchanged inputs/full-model predictions, and saved-index reload. The learner explained why changing two factors confounds the comparison and why more training examples do not guarantee better predictions. Earlier selection/split/result records are unchanged; test evaluation remains reserved.
+
+Step 11 is complete: the frozen full-training k=1 model scores 356/360 clean, 355/354/342 with shared seed-42 Gaussian noise at sigma 1/2/4, and 224/220/250/244 with separate left/right/up/down one-pixel zero-filled shifts. Originals and intended labels are preserved; no transformed data is fitted. Separate tables, exact inputs/predictions, examples, seven deterministic failure traces with neighbors, and galleries are saved. All runnable checks pass; fresh-process results reproduce; figures are visually inspected; prior artifacts remain unchanged. The learner explained how shifting pixels changes neighbors, why originals must remain untouched, and why shifted-image results do not invalidate the clean score. Step 12 is next; test evaluation has not started.
 
 - [x] 0. Define the prediction task and verify a small reproducible Python environment.
 - [x] 1. Inspect shapes, dtypes, ranges, labels, alignment, and class counts.
@@ -36,7 +38,7 @@ Step 10 is complete: seed-42 nested class-stratified pools contain 109, 268, 537
 - [x] 9. Build and visibly verify the prediction-and-neighbor viewer.
 - [x] Checkpoint C: justify selection and explain correct and incorrect predictions.
 - [x] 10. Compare fixed-k performance with nested stratified training subsets.
-- [ ] 11. Evaluate separate noise and zero-filled translation experiments on copies.
+- [x] 11. Evaluate separate noise and zero-filled translation experiments on copies.
 - [ ] 12. Evaluate the frozen model on test; finish gallery, report, and fresh-process reproduction.
 - [ ] Final learning checkpoint: meet the ready-to-advance criteria without an accuracy target.
 

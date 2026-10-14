@@ -729,7 +729,61 @@ Outputs in artifacts:
 
 The toy check covers unequal class sizes, nested membership, rounding, class coverage, repeatability, original ordering, and unchanged inputs. The real experiment checks training-only membership, exclusion of validation/test IDs, sufficient size for k, class coverage, archive reload, unchanged validation inputs, and unchanged full-model predictions. Earlier selection, split, comparison, and error-analysis records are unchanged. No test predictions were generated.
 
-Step 10 is complete: implementation is verified, and the learner explained why changing training size and k together would obscure their separate effects, and why additional training examples can sometimes worsen predictions. Even correctly labeled new examples can change the nearest neighbor to an incorrect class. This is one seeded subset sequence, without repeated-seed uncertainty estimates or separate k searches at each size. Step 11's noise and translation experiments are next and have not started; the final test partition remains unevaluated.
+Step 10 is complete: implementation is verified, and the learner explained why changing training size and k together would obscure their separate effects, and why additional training examples can sometimes worsen predictions. Even correctly labeled new examples can change the nearest neighbor to an incorrect class. This is one seeded subset sequence, without repeated-seed uncertainty estimates or separate k searches at each size. Step 11 is implemented below; the final test partition remains unevaluated.
+
+## Step 11: noise and translations on validation copies
+
+```sh
+.venv/bin/python check_robustness.py
+.venv/bin/python robustness.py
+```
+
+The shared loader fits the frozen k=1 procedure on the original training partition once at startup. All conditions then call predict with that same model; no transformed validation images are used for fitting or hyperparameter selection. Each condition represents the same 360 validation IDs and intended labels, in the same order. The original clean score remains available as a reference.
+
+### Noise: change brightness values
+
+Generate one seed-42 standard-normal array with shape (360,8,8). Its distribution has mean zero and standard deviation one; an individual finite draw need not have exactly those statistics. For strength sigma, calculate clip(clean + sigma * noise, 0, 16) on float copies. A larger standard deviation means a wider spread of changes, not a maximum absolute change. Reusing the same pattern across strengths controls which random realization is used. All strengths start from clean, not the previous noisy output.
+
+Fractional brightness values are retained. Clipping replaces values below zero with zero and values above sixteen with sixteen; it does not rescale the whole image. The post-clipping changes need not have mean zero, especially at the brightness boundaries.
+
+| Condition | Correct/total | Accuracy | Newly wrong | Recovered |
+| --- | --- | --- | --- | --- |
+| Clean | 356/360 | 98.89% | 0 | 0 |
+| Noise sigma=1 | 355/360 | 98.61% | 1 | 0 |
+| Noise sigma=2 | 354/360 | 98.33% | 2 | 0 |
+| Noise sigma=4 | 342/360 | 95.00% | 15 | 1 |
+
+Newly wrong means correct on clean but incorrect after transformation. Recovered means incorrect on clean but correct after transformation. For sigma=4, 356 - 15 + 1 = 342 correct; the corruption did not hurt every individual prediction.
+
+### Translation: move pixel positions
+
+Shift a separate clean copy by one pixel left, right, up, or down. Exposed positions receive zero, matching the black background. Pixels leaving the 8x8 frame are discarded; they never wrap around to the opposite edge. One pixel is 1/8 of an image dimension, so this is a substantial translation and can crop strokes. Noise and translation are not combined.
+
+| Condition | Correct/total | Accuracy | Newly wrong | Recovered |
+| --- | --- | --- | --- | --- |
+| Clean | 356/360 | 98.89% | 0 | 0 |
+| Shift left | 224/360 | 62.22% | 132 | 0 |
+| Shift right | 220/360 | 61.11% | 137 | 1 |
+| Shift up | 250/360 | 69.44% | 106 | 0 |
+| Shift down | 244/360 | 67.78% | 113 | 1 |
+
+Raw Euclidean distance compares fixed pixel positions. In a tiny row, [0,0,16,0] and its left shift [0,16,0,0] differ at two positions, producing squared distance 16^2 + 16^2 = 512 despite containing the same bright pixel. This mechanism, plus possible cropping, helps explain the observed sensitivity. The experiment does not isolate alignment from cropping.
+
+For example, clean validation sample 1686 (label 9) is predicted as 9. Its left-shifted copy is predicted as 5 because its closest training example is sample 33, labeled 5, at Euclidean distance 37.31. The gallery shows that exact voting neighbor. Similar-looking images need not be close under this representation.
+
+### Saved artifacts and verification
+
+- `robustness-noise-results.csv` and `robustness-translation-results.csv`: separate tables with clean references, error counts, and prediction changes.
+- `robustness-inputs.npz`: validation IDs, intended labels, shared noise array, every clean/transformed batch, and matching predictions. Each image batch has shape (360,8,8) and is flattened to (360,64) for prediction.
+- `robustness-examples.png`: the first two saved validation rows under all conditions, with fixed brightness display limits.
+- `robustness-noise-failures.png` and `robustness-translation-failures.png`: clean query, transformed query, and every voting training neighbor. Each condition shows its first newly wrong validation row; if none exists, its first error is used, or no case if it has no errors. These examples illustrate mechanisms; the tables measure all queries.
+- `robustness-report.json`: frozen selection provenance, transformation procedure, seed, results, and all seven displayed failure traces. Sample IDs may repeat across conditions.
+
+Toy checks verify exact shifts on distinct arrays, zero fill/no wrapping, clipping boundaries, fractional noise, repeatability, and unchanged inputs. Runtime checks verify shapes/ranges, labels and clean-input preservation, unchanged clean predictions, transition-count accounting, saved-array reload, and agreement between each trace, its votes, and independently calculated distances. All existing runnable checks pass. A fresh-process rerun reproduces the archive, tables, and report. All three figures were visually inspected, and earlier artifacts are unchanged.
+
+These experiments study robustness under specified input changes. They preserve the intended label, but severe noise or cropping can make an image ambiguous. The translation results do not negate the clean benchmark score or establish performance on personal drawings. They show a limitation worth recording before final evaluation. Fitting on corrupted validation examples would compromise this partition's role; any later augmentation belongs to training data in a separately declared procedure.
+
+Step 11 is complete: implementation is verified, and the learner explained that shifted pixels can change the nearest neighbor and its label, that the original images must remain untouched for comparison, and that lower shifted-image accuracy does not invalidate the clean validation score. The noise study uses one random realization; no retuning or test evaluation occurred. Step 12's held-out test evaluation and final report are next and have not started.
 
 ## References
 
@@ -756,3 +810,5 @@ Step 10 is complete: implementation is verified, and the learner explained why c
 - [Matplotlib interactive displays and WebAgg](https://matplotlib.org/stable/users/explain/figure/backends.html)
 - [Scikit-learn learning curves](https://scikit-learn.org/stable/modules/learning_curve.html)
 - [NumPy seeded generators and permutations](https://numpy.org/doc/stable/reference/random/generator.html)
+- [NumPy Gaussian noise](https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.normal.html)
+- [NumPy clipping](https://numpy.org/doc/stable/reference/generated/numpy.clip.html)
