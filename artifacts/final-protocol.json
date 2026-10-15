@@ -1,0 +1,56 @@
+{
+  "selection": {
+    "model_parameters": {
+      "algorithm": "brute",
+      "leaf_size": 30,
+      "metric": "euclidean",
+      "metric_params": null,
+      "n_jobs": null,
+      "n_neighbors": 1,
+      "p": 2,
+      "weights": "uniform"
+    },
+    "representation": "raw_pixels",
+    "candidate_k": [
+      1,
+      3,
+      5,
+      9
+    ],
+    "selection_rule": "highest clean validation accuracy; smallest k on an exact tie",
+    "validation": {
+      "correct": 356,
+      "total": 360,
+      "accuracy": 0.9888888888888889
+    },
+    "final_fit_policy": "original_training_partition_only",
+    "dataset_digest": "f6d9e39f37dc45d327f6db33428ee58970ccceabb2535a5c179de35886b70443",
+    "split_file_sha256": "b4e17e07a51095fc706a1ea172139824cd69f4e74138a4f0fdb072ce13a6fb46",
+    "python": "3.14.4",
+    "numpy": "2.5.3",
+    "scikit_learn": "1.9.1"
+  },
+  "seed": 42,
+  "training_count": 1077,
+  "training_indices_sha256": "399e63a7ce3290f689b139dba761cd893ba17815afb42920493c3d11b7bd71c7",
+  "test_count": 360,
+  "baseline": {
+    "strategy": "most_frequent",
+    "label": 1,
+    "tie_rule": "lowest label"
+  },
+  "versions": {
+    "python": "3.14.4",
+    "numpy": "2.5.3",
+    "scikit_learn": "1.9.1",
+    "matplotlib": "3.11.2"
+  },
+  "source_sha256": {
+    "experiment.py": "53555ca2db6df9ffc38807b614abc0cd9f0ef704ab91efd65274288e2acd5f75",
+    "neighbor_math.py": "f36dc3e39519ace64d520fae24c5a698907ded2a0a7ba759fa998ee2dd3be5f0",
+    "analyze_errors.py": "a71a492461186a74e9f471a3a0f818d3ca79c5307d579cb01ed1a191874138e1",
+    "final_evaluate.py": "921126f1cc6ff4f6aef89dc2aca003d7b3dd018f8dd3f0032b7a95390297c99c",
+    "requirements.txt": "d6e4d67c4773f2e66828cbe8bc57e6a6ff5113010d8c3f41e797d82c81cb1391"
+  },
+  "test_policy": "final evaluation of frozen procedure; no test-driven tuning or train-plus-validation refit"
+}

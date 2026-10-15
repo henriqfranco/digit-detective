@@ -54,16 +54,16 @@ def load_selected_experiment(artifacts):
     return digits, splits, selection, model, predictions
 
 
-def main():
-    artifacts = Path(__file__).resolve().parent / "artifacts"
-    digits, splits, selection, model, predictions = load_selected_experiment(artifacts)
-    training, validation = splits["train"], splits["validation"]
+def save_error_analysis(digits, splits, selection, model, predictions, artifacts, partition):
+    if partition not in ("validation", "test"):
+        raise ValueError("Error analysis requires validation or test predictions")
+    training, evaluation = splits["train"], splits[partition]
     X_train, y_train = digits.data[training], digits.target[training]
-    X_validation, y_validation = digits.data[validation], digits.target[validation]
-    summary = summarize_predictions(y_validation, predictions)
+    X_evaluation, y_evaluation = digits.data[evaluation], digits.target[evaluation]
+    summary = summarize_predictions(y_evaluation, predictions)
     correct = int(summary["correct"].sum())
 
-    print(f"Selected k={model.n_neighbors}: validation {correct}/{len(validation)}, {len(summary['wrong_rows'])} mistakes.")
+    print(f"Selected k={model.n_neighbors}: {partition} {correct}/{len(evaluation)}, {len(summary['wrong_rows'])} mistakes.")
     print("Rows are true labels; columns are predicted labels.")
     print(summary["matrix"])
     print("\nLabel  True  Predicted  Correct  Missed  Recall   Precision")
@@ -82,14 +82,14 @@ def main():
         }
         class_rows.append(row)
         print(f"{label:>5}  {row['true_count']:>4}  {row['predicted_count']:>9}  {row['correct']:>7}  {row['missed']:>6}  {recall_text:>7}  {precision_text:>9}")
-    with (artifacts / "validation-per-class.csv").open("w", newline="") as output:
+    with (artifacts / f"{partition}-per-class.csv").open("w", newline="") as output:
         writer = csv.DictWriter(output, fieldnames=class_rows[0].keys())
         writer.writeheader()
         writer.writerows(class_rows)
 
     for matrix, title, number_format, suffix in [
-        (summary["matrix"], "Validation counts", "d", "counts"),
-        (summary["normalized"] * 100, "Validation row percentages (%)", ".1f", "percent"),
+        (summary["matrix"], f"{partition.capitalize()} counts", "d", "counts"),
+        (summary["normalized"] * 100, f"{partition.capitalize()} row percentages (%)", ".1f", "percent"),
     ]:
         figure, ax = plt.subplots(figsize=(6, 5.2), layout="constrained")
         ConfusionMatrixDisplay(matrix, display_labels=np.arange(10)).plot(
@@ -98,22 +98,22 @@ def main():
         ax.set_title(f"{title} | selected k={model.n_neighbors}")
         ax.set_xlabel("Predicted digit")
         ax.set_ylabel("True digit")
-        figure.savefig(artifacts / f"validation-confusion-{suffix}.png", dpi=160)
+        figure.savefig(artifacts / f"{partition}-confusion-{suffix}.png", dpi=160)
         plt.close(figure)
 
     wrong_rows = summary["wrong_rows"].tolist()
     displayed_rows = wrong_rows.copy()
-    correct_rows = np.flatnonzero(predictions == y_validation)
+    correct_rows = np.flatnonzero(predictions == y_evaluation)
     if len(correct_rows):
         displayed_rows.append(int(correct_rows[0]))
     cases = []
     for row in displayed_rows:
-        case = trace_knn_prediction(model, X_validation[row], X_train, y_train, training)
+        case = trace_knn_prediction(model, X_evaluation[row], X_train, y_train, training)
         assert case["prediction"] == predictions[row], "Trace and batch prediction disagree"
         assert all(neighbor["dataset_index"] in training for neighbor in case["neighbors"])
         case.update({
-            "validation_row": row, "query_dataset_index": int(validation[row]),
-            "true_label": int(y_validation[row]), "correct": bool(predictions[row] == y_validation[row]),
+            f"{partition}_row": row, "query_dataset_index": int(evaluation[row]),
+            "true_label": int(y_evaluation[row]), "correct": bool(predictions[row] == y_evaluation[row]),
         })
         cases.append(case)
         if not case["correct"]:
@@ -123,7 +123,7 @@ def main():
 
     columns = model.n_neighbors + 1
     gallery, axes = plt.subplots(len(cases), columns, figsize=(3 * columns, 2.2 * len(cases)), squeeze=False, layout="constrained")
-    gallery.suptitle(f"All {len(wrong_rows)} validation mistakes and one correct comparison | k={model.n_neighbors}", fontsize=13)
+    gallery.suptitle(f"All {len(wrong_rows)} {partition} mistakes and one correct comparison | k={model.n_neighbors}", fontsize=13)
     for row, case in enumerate(cases):
         status = "Correct comparison" if case["correct"] else "Mistake"
         axes[row, 0].imshow(digits.images[case["query_dataset_index"]], cmap="gray", vmin=0, vmax=16, interpolation="nearest")
@@ -133,18 +133,25 @@ def main():
             axes[row, column].set_title(f"Voting training sample {neighbor['dataset_index']}\nLabel {neighbor['label']} | distance {neighbor['distance']:.2f}", fontsize=10)
     for ax in axes.flat:
         ax.set_axis_off()
-    gallery.savefig(artifacts / "validation-failure-gallery.png", dpi=160)
+    gallery.savefig(artifacts / f"{partition}-failure-gallery.png", dpi=160)
     plt.close(gallery)
 
     report = {
-        "partition": "validation", "selection": selection, "total": len(validation), "correct": correct,
+        "partition": partition, "selection": selection, "total": len(evaluation), "correct": correct,
         "label_order": list(range(10)), "confusion_matrix": summary["matrix"].tolist(),
         "row_percentages": (summary["normalized"] * 100).tolist(),
         "mistakes": [case for case in cases if not case["correct"]],
         "correct_comparison": next((case for case in cases if case["correct"]), None),
     }
-    (artifacts / "validation-error-report.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
+    (artifacts / f"{partition}-error-report.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
     print(f"\nSaved confusion plots, per-class results, all mistake traces, and gallery in: {artifacts}")
+    return report
+
+
+def main():
+    artifacts = Path(__file__).resolve().parent / "artifacts"
+    digits, splits, selection, model, predictions = load_selected_experiment(artifacts)
+    save_error_analysis(digits, splits, selection, model, predictions, artifacts, "validation")
     print("Allocation, selection, and comparison records were not rewritten. Test examples were not evaluated.")
 
 

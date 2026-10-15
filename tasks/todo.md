@@ -1,5 +1,7 @@
 # Digit Detective progress
 
+Current status: Steps 0–12 and all core learning checkpoints are complete. Test evaluation is complete: k=1 scores 355/360 (98.61%), baseline 36/360 (10.00%). Earlier step notes describe which data was available at those stages; test remained reserved until Step 12. Optional persistence and personal-drawing work have not started.
+
 Step 0 is complete: setup verified and understanding checkpoint discussed. Classification selects discrete categories; a label supplied during prediction would leak the answer and undermine evaluation. Each step includes its acceptance criteria, verification, dependencies, and likely files in [plan.md](plan.md). Work sequentially and complete the explain-back checkpoint before advancing.
 
 Step 1 is complete: inspection verified expected shapes and dtypes, finite values, pixel range 0..16, labels 0..9, counts totaling 1,797, and one corresponding image/feature/label record. Class counts range from 174 to 183. Through a smaller visual example, the learner demonstrated sample/feature indexing, the distinction between X and y, and why image/label pairs must stay aligned.
@@ -22,7 +24,9 @@ Step 9 and Checkpoint C are complete: viewer.py uses the shared selected-experim
 
 Step 10 is complete: seed-42 nested class-stratified pools contain 109, 268, 537, and 1,077 original training IDs. With fixed k=1 and unchanged clean validation queries, they score 331, 345, 352, and 356 correct out of 360. Saved indices, exact class counts, table, and plot are reproducible. Toy and real checks cover nesting, training-only membership, ordering, class coverage, unchanged inputs/full-model predictions, and saved-index reload. The learner explained why changing two factors confounds the comparison and why more training examples do not guarantee better predictions. Earlier selection/split/result records are unchanged; test evaluation remains reserved.
 
-Step 11 is complete: the frozen full-training k=1 model scores 356/360 clean, 355/354/342 with shared seed-42 Gaussian noise at sigma 1/2/4, and 224/220/250/244 with separate left/right/up/down one-pixel zero-filled shifts. Originals and intended labels are preserved; no transformed data is fitted. Separate tables, exact inputs/predictions, examples, seven deterministic failure traces with neighbors, and galleries are saved. All runnable checks pass; fresh-process results reproduce; figures are visually inspected; prior artifacts remain unchanged. The learner explained how shifting pixels changes neighbors, why originals must remain untouched, and why shifted-image results do not invalidate the clean score. Step 12 is next; test evaluation has not started.
+Step 11 is complete: the frozen full-training k=1 model scores 356/360 clean, 355/354/342 with shared seed-42 Gaussian noise at sigma 1/2/4, and 224/220/250/244 with separate left/right/up/down one-pixel zero-filled shifts. Originals and intended labels are preserved; no transformed data is fitted. Separate tables, exact inputs/predictions, examples, seven deterministic failure traces with neighbors, and galleries are saved. All runnable checks pass; fresh-process results reproduce; figures are visually inspected; prior artifacts remain unchanged. The learner explained how shifting pixels changes neighbors, why originals must remain untouched, and why shifted-image results do not invalidate the clean score. Test evaluation remained reserved through this step.
+
+Step 12 and the final learning checkpoint are complete: final-protocol.json records the original training-only procedure before test prediction; final-test-results.json and test-predictions.npz preserve exact baseline/KNN outcomes. There are five test errors: 8→1 three times, 9→4 once, 9→8 once. Class metrics, both confusion figures, all failure traces/gallery, report.md, and a live viewer screenshot are saved. Validation/Test browsing uses the same fitted model and recorded predictions; test access checks protocol/archive/partition identity. The combined check_final.py suite passes, a fresh-process run reproduces results, figures/live controls are verified, and earlier artifacts are unchanged. The learner identified test-based k adjustment as validation feedback and explained why personal drawings need not match benchmark accuracy; we clarified that new examples can share a distribution while drawing inputs can differ systematically. Earlier checkpoints covered the other ready-to-advance concepts. No test-driven retuning occurred. File organization remains flat after the discarded src reorganization.
 
 - [x] 0. Define the prediction task and verify a small reproducible Python environment.
 - [x] 1. Inspect shapes, dtypes, ranges, labels, alignment, and class counts.
@@ -39,8 +43,8 @@ Step 11 is complete: the frozen full-training k=1 model scores 356/360 clean, 35
 - [x] Checkpoint C: justify selection and explain correct and incorrect predictions.
 - [x] 10. Compare fixed-k performance with nested stratified training subsets.
 - [x] 11. Evaluate separate noise and zero-filled translation experiments on copies.
-- [ ] 12. Evaluate the frozen model on test; finish gallery, report, and fresh-process reproduction.
-- [ ] Final learning checkpoint: meet the ready-to-advance criteria without an accuracy target.
+- [x] 12. Evaluate the frozen model on test; finish gallery, report, and fresh-process reproduction.
+- [x] Final learning checkpoint: meet the ready-to-advance criteria without an accuracy target.
 
 ## Optional, after the core workflow
 

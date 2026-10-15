@@ -2,6 +2,8 @@
 
 An educational project for recognizing handwritten digits and explaining predictions through their nearest training examples.
 
+Current status: Steps 0–12 and all core learning checkpoints are complete. The frozen test evaluation, test gallery, final report, and validation/test viewer are implemented and verified. Selected k=1 scores 355/360 (98.61%) on the now-inspected test partition. See [the short report](report.md) and Step 12 below. Earlier sections describe the experiment at each learning stage; test data was reserved until Step 12. Optional model persistence and personal-drawing work have not started.
+
 ## Step 0: define the task
 
 The input is an 8x8 grayscale image represented by pixel intensities. The output is one category from 0 through 9.
@@ -686,15 +688,16 @@ Open the local URL printed by the program, normally http://127.0.0.1:8988/. Keep
 Controls:
 
 - Previous/Next browse the selected collection and wrap at its ends.
-- Mistakes only switches between all 360 validation images and the four errors.
+- Mistakes only switches between all images and errors in the selected partition: validation has 360 images/four errors, and test has 360 images/five errors.
+- Validation/Test radio buttons select the displayed partition. Test is offered only after recorded final results and their prediction archive pass the identity checks described in Step 12.
 - Left/right arrows navigate and M toggles the filter when the figure has keyboard focus.
 - Matplotlib's download toolbar exports the displayed figure.
 
 The viewer shows original query IDs, actual/predicted labels, correctness, the exact k, every voting neighbor's original ID and training-row position, Euclidean distances, and vote counts. An empty mistakes collection shows an explanatory message and no stale images; navigation becomes a no-op until the filter is cleared. Votes are labeled as agreement, not calibrated confidence.
 
-`load_selected_experiment` was extracted from analyze_errors.py because both analysis and the viewer now need the same setup. Its dataset/split identity checks, training-only fit policy, and reproduction check remain intact. Startup fits the recorded k=1 model once and obtains validation predictions. Navigation calls the existing trace_knn_prediction function; it does not refit or search settings. Filtering uses those predictions and known validation labels only to choose which queries to display. Test browsing is unavailable during development.
+`load_selected_experiment` was extracted from analyze_errors.py because analysis and the viewer need the same setup. Its dataset/split identity checks, training-only fit policy, and reproduction check remain intact. Startup fits the recorded k=1 model once and obtains validation predictions. After final evaluation, it also loads the recorded test predictions; partition switching and navigation use the same fitted classifier. Navigation calls trace_knn_prediction without refitting or searching settings. Filtering uses predictions and the selected partition's known labels only to choose queries. Test browsing was unavailable during development and is now unlocked by the final records.
 
-Startup saves `viewer-correct-example.png` and `viewer-mistake-example.png` for the report. `viewer-live.jpg` records the verified live interface. Run the callback/state check with `.venv/bin/python check_viewer.py`: it covers navigation, wrapping, the four errors, image/ID alignment, and an empty mistakes collection. Mouse controls, arrow navigation, and M were also verified in the browser. Existing KNN, baseline, split, and metric checks passed; error analysis was rerun to verify the shared-loading change. Earlier JSON, split, and CSV records remain unchanged.
+Startup saves `viewer-validation-example.png`, `viewer-validation-mistake.png`, and, after final evaluation, `viewer-test-example.png`. Earlier Step 9 snapshots (`viewer-correct-example.png`, `viewer-mistake-example.png`, and `viewer-live.jpg`) are preserved. Run `.venv/bin/python check_viewer.py` for navigation, wrapping, partition gating/switching, filtering, image/ID alignment, and an empty mistakes collection. Step 12's `viewer-final-live.png` records the updated live interface.
 
 Step 9 and Checkpoint C are complete: the learner explained that navigation uses the existing fitted model, following the earlier selection, confusion-matrix, and neighbor-vote walkthroughs.
 
@@ -729,7 +732,7 @@ Outputs in artifacts:
 
 The toy check covers unequal class sizes, nested membership, rounding, class coverage, repeatability, original ordering, and unchanged inputs. The real experiment checks training-only membership, exclusion of validation/test IDs, sufficient size for k, class coverage, archive reload, unchanged validation inputs, and unchanged full-model predictions. Earlier selection, split, comparison, and error-analysis records are unchanged. No test predictions were generated.
 
-Step 10 is complete: implementation is verified, and the learner explained why changing training size and k together would obscure their separate effects, and why additional training examples can sometimes worsen predictions. Even correctly labeled new examples can change the nearest neighbor to an incorrect class. This is one seeded subset sequence, without repeated-seed uncertainty estimates or separate k searches at each size. Step 11 is implemented below; the final test partition remains unevaluated.
+Step 10 is complete: implementation is verified, and the learner explained why changing training size and k together would obscure their separate effects, and why additional training examples can sometimes worsen predictions. Even correctly labeled new examples can change the nearest neighbor to an incorrect class. This is one seeded subset sequence, without repeated-seed uncertainty estimates or separate k searches at each size. Test evaluation first occurs in Step 12 below.
 
 ## Step 11: noise and translations on validation copies
 
@@ -783,7 +786,45 @@ Toy checks verify exact shifts on distinct arrays, zero fill/no wrapping, clippi
 
 These experiments study robustness under specified input changes. They preserve the intended label, but severe noise or cropping can make an image ambiguous. The translation results do not negate the clean benchmark score or establish performance on personal drawings. They show a limitation worth recording before final evaluation. Fitting on corrupted validation examples would compromise this partition's role; any later augmentation belongs to training data in a separately declared procedure.
 
-Step 11 is complete: implementation is verified, and the learner explained that shifted pixels can change the nearest neighbor and its label, that the original images must remain untouched for comparison, and that lower shifted-image accuracy does not invalidate the clean validation score. The noise study uses one random realization; no retuning or test evaluation occurred. Step 12's held-out test evaluation and final report are next and have not started.
+Step 11 is complete: implementation is verified, and the learner explained that shifted pixels can change the nearest neighbor and its label, that the original images must remain untouched for comparison, and that lower shifted-image accuracy does not invalidate the clean validation score. The noise study uses one random realization; no retuning or test evaluation occurred during that study. Step 12's final evaluation follows below.
+
+## Step 12: final held-out evaluation and report
+
+```sh
+.venv/bin/python final_evaluate.py
+.venv/bin/python check_final.py
+.venv/bin/python viewer.py
+```
+
+Before predicting test images, final_evaluate.py saves or verifies `artifacts/final-protocol.json`: the frozen Step 7 selection and split identity, original training index digest/count, baseline label/tie rule, random seed, package versions, and source/dependency fingerprints. The baseline label is selected from training counts before any test predictions. It is still label 1. The selected model uses k=1, raw pixels, Euclidean distance, uniform votes, exact brute-force neighbors, and only the 1,077 original training examples. Neither the reduced-training nor robustness studies replaced that procedure. Validation is not added to training.
+
+| Procedure | Validation correct | Validation accuracy | Test correct | Test accuracy |
+| --- | --- | --- | --- | --- |
+| Training-majority baseline: always 1 | 37/360 | 10.28% | 36/360 | 10.00% |
+| Selected KNN: k=1 | 356/360 | 98.89% | 355/360 | 98.61% |
+
+The test result has five mistakes. Three actual eights are predicted as ones; one nine is predicted as four and another as eight. Test recall for eight is 32/35=91.43%; for nine, 34/36=94.44%. Other digits have 100% recall on these particular test samples. The three eights also reduce digit one's precision to 36/39=92.31%, despite finding every actual one. Perfect measured recall is not a guarantee about future images.
+
+The evaluator writes exact predictions and freezes aggregate metrics before inspecting individual mistakes. Repeated runs verify the same protocol, predictions, and metrics, and refuse mismatches rather than silently replacing the recorded result. Error analysis reuses save_error_analysis from analyze_errors.py, parameterized by partition; the original validation report remains separate and reproduces unchanged.
+
+Final artifacts:
+
+- `final-protocol.json`: procedure recorded before test prediction.
+- `test-predictions.npz`: original test IDs, intended labels, and exact baseline/KNN predictions in matching order.
+- `final-test-results.json`: correct/total, errors, accuracy, class supports, recall, confusion matrix, and protocol/archive fingerprints.
+- `test-per-class.csv`, `test-confusion-counts.png`, and `test-confusion-percent.png`: class detail and explicitly labeled true-row/predicted-column matrices.
+- `test-error-report.json` and `test-failure-gallery.png`: all five mistakes in saved test order, every voting training neighbor, distances/votes, and the first correct example. Fewer than six errors exist, so every available one is included.
+- `viewer-final-live.png`: the verified live test-mistake view. Validation/Test controls and the mistakes filter retain explicit partition labels. Test predictions are loaded only when their selected-procedure, protocol, archive, and index identities agree.
+
+The concise [final report](report.md) connects representation, splits, the baseline, distance/voting, k selection, test performance, diagnostics, limitations, and reproduction commands. The existing flat file layout is retained.
+
+`check_final.py` is also the combined project check: saved-split integrity, the toy distance/vote demo, baseline/KNN rules, metrics, nested subsets, corruption invariants, image/vector identity, validation/test viewer behavior, final-record integrity, all gallery IDs, and report totals. A fresh-process final evaluation reproduced identical protocol, predictions, metrics, and error reports. Figures were visually inspected. Live partition switching, test filtering, and navigation were verified in the browser; earlier artifacts remain unchanged.
+
+The validation score helped choose k, so it contains model-selection feedback. The test score evaluates the already chosen procedure on previously unused samples. It is a more appropriate final estimate for this dataset/split, not an exact future success rate. One error among 360 changes accuracy by about 0.28 percentage points; a one-error difference from validation does not prove a meaningful change in generalization. The split does not establish independence of writers, and benchmark accuracy does not transfer automatically to drawings or corrupted inputs.
+
+The test partition has now been inspected and cannot become untouched again by deleting outputs or rerunning the code. No new k, preprocessing, or augmentation is selected from these results. Reproducing the fixed procedure is allowed; a redesign would be a new study with its evaluation limits stated honestly.
+
+Step 12 and the final learning checkpoint are complete. The learner explained that using test results to adjust k would turn test into validation feedback, and that benchmark performance does not guarantee the same accuracy on personal drawings. We clarified that validation images were also excluded from fitting: their results influenced model selection, whereas the test results evaluated the fixed choice. New examples can share the benchmark distribution; personal drawings may differ in centering, stroke width, background polarity, or resizing. Earlier checkpoints covered data representation, splits, distance/voting, hyperparameters, metrics, diagnostics, and reproducibility. The core project is complete without an accuracy target. Optional persistence and drawing challenges remain separate future work.
 
 ## References
 

@@ -1,6 +1,6 @@
 # Digit Detective: learning and implementation plan
 
-Status: Steps 0 through 11 and Checkpoints A, B, and C are complete, including Step 11's implementation and learning checkpoint. Step 12's held-out test evaluation and final report are next and have not started. Frozen selection and prior records are unchanged; test evaluation has not started.
+Status: Steps 0 through 12, Checkpoints A, B, and C, and the final learning checkpoint are complete. The frozen test evaluation, gallery, report, and validation/test viewer are implemented and verified. The learner explained test-based tuning as validation feedback and the limits of transferring benchmark accuracy to personal drawings. Selected k=1 scores 355/360 (98.61%) on test; the baseline scores 36/360 (10.00%). Test data is now inspected; no retuning followed. Original selection, splits, and development artifacts remain unchanged. The restored flat file layout is retained. Optional persistence and personal-drawing work have not started.
 
 ## Objective and learning contract
 
